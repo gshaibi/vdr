@@ -1,20 +1,18 @@
-CC=g++
-CXXFLAGS= -ansi -std=c++98 -pedantic-errors -Wall -Wextra -O0 -g3 -fPIC -shared 
+CXX=g++
+CXXFLAGS=$(INCLUDES) -ansi -std=c++98 -pedantic-errors -Wall -Wextra -O0 -g3 -fPIC -shared 
 INCS=include ../include ../../include
-INCLUDES=
-TARGETS=minion 
-OBJS=
+INCLUDES=$(patsubst %, -I%, $(INCS))
+TARGETS=
+OBJS=$(patsubst %, %.o, $(TARGETS))
 SHLIBS=
 
-minion.so: 
-	  $^  -o minion
+.so: $(OBJS)
+$(CXX) $(CXXFLAGS) $^ $(SHLIBS) -o 
 
-test: minion_test.cpp minion.cpp
-	g++ -g3 $^   
+test: _test.cpp .cpp
+g++ -g3 $^  $(INCLUDES) $(SHLIBS)
 
 clean:
-	-rm *.o *.out *.so
+-rm *.o *.out *.so
 
 .PHONY: clean test 
-
-
