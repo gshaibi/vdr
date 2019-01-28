@@ -1,6 +1,31 @@
-#ifndef master_proxy_hpp
-#define master_proxy_hpp
+#ifndef MASTER_PROXY_HPP
+#define MASTER_PROXY_HPP
+
+#include <boost/noncopyable.hpp>
+#include <vector>
+
+#include "protocols.hpp"
+#include "reactor.hpp"
+
+namespace ilrd
+{
+
+class MasterProxy : boost::noncopyable
+{
+public:
+	explicit MasterProxy(Reactor& r_);
+	// generated dtor
+
+	void ReplyRead(const protocols::ID& id_, int status_, std::vector<char> data_);
+	void ReplyWrite(const protocols::ID& id_, int status_);
+
+private:
+	static const int SERVER_UDP_PORT = 3000;
+
+	void OnPacketCB();
+};
+
+} // ilrd
 
 
-
-#endif // master_proxy_hpp
+#endif // MASTER_PROXY_HPP
