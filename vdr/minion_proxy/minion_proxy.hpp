@@ -6,27 +6,37 @@
 #include <boost/noncopyable.hpp> //using boost::noncopyable
 #include <boost/shared_ptr.hpp> //using boost::shared_ptr
 
-#include "msg_protocol.hpp" //using minionMsgProtocol
+#include "protocols.hpp" //using minionMsgProtocol
 
 namespace ilrd
 {
 
+class Reactor;
+class Master;
+
 class MinionProxy :private boost::noncopyable
 {
 public:
-	MinionProxy(int minionID_, size_t numBlocks_, size_t blockSize_);
+	MinionProxy(int minionID_, Master& master_, Reactor& reac_);
 	~MinionProxy(); //delete memory
 	
-	void ReadRequest(minionMsgProtocol::ReadRequest req_);
-	void WriteRequest(minionMsgProtocol::WriteRequest req_);
+	void ReadRequest(protocols::minion::ReadRequest req_);
+	void WriteRequest(protocols::minion::WriteRequest req_);
 
 private:
-	int m_minionID;
-	char *m_memory;
-	size_t m_blockSize;
+	void RegisterToReactorIMP();
+	int CreateUDPSocketIMP();
+
+	void RecieveFromMinionCB(int socket_);
+	void SendToMinionIMP(int socket_);
+
+	static const int UDP_PORT =  3000;
+	const int m_minionID;
+	Master& m_master;
+	Reactor& m_reactor;
+	int m_minionSocket;
 };
 
 } //namspace ilrd
-
 
 #endif //MINION_PROXY_HPP

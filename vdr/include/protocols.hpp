@@ -5,6 +5,8 @@
 #include <cstddef> //size_t
 #include <vector>
 
+#include <linux/types.h> //using __be64 __be32 in udp protocol
+
 namespace ilrd
 {
 
@@ -25,6 +27,8 @@ public:
 
 private:
     friend class ilrd::OsProxy;
+	friend class ilrd::MinionProxy;
+
     const char* GetID() const;
 
     static const size_t ID_ARR_SIZE = 8;
@@ -169,6 +173,38 @@ private:
 };
 
 } // namespace minion
+
+namespace minionUDP
+{
+
+//block size
+static const int BLK_SIZE = 0x1000; //protocol predefined block size (4k)
+
+//request types
+enum RequestType
+{
+	REQ_READ = 0,
+	REQ__WRITE = 1,
+};
+
+//request
+struct request 
+{
+	__be32 reqType;	// == READ || == WRITE 
+	char reqID[8];
+	__be64 blockNum;
+	char data[0x1000]; //4k of data
+};
+
+// Reply 
+struct reply 
+{
+	__be32 status;		// 0 = ok, else error
+	char reqID[8];		// ID you got from request
+	char data[0x1000]; //4k of data
+};
+
+} //namespace minionUDP
 
 } // protocols
 
