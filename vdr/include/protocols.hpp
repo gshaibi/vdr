@@ -27,7 +27,7 @@ public:
 
 private:
     friend class ilrd::OsProxy;
-	friend class ilrd::MinionProxy;
+	//friend class ilrd::MinionProxy;
 
     const char* GetID() const;
 
@@ -158,8 +158,8 @@ class ReadReply :private WriteReply
 public:
     typedef boost::shared_ptr<const std::vector<char> > SharedBuffer;
 
-    explicit ReadReply(int minionId_, int status, const ID& id_,
-							  SharedBuffer buff_);
+    explicit ReadReply(const ID& id_, int minionId_, int status,
+							  					SharedBuffer buff_);
     //generated dtor, cctor op=
 
     using WriteReply::GetID;
@@ -179,19 +179,19 @@ namespace minionUDP
 
 //block size
 static const int BLK_SIZE = 0x1000; //protocol predefined block size (4k)
-
+static const int HDR_SIZE = 0x8; //protocol predefined block size (4k)
 //request types
 enum RequestType
 {
-	REQ_READ = 0,
-	REQ__WRITE = 1,
+	READ = 0,
+	WRITE = 1
 };
 
 //request
 struct request 
 {
-	__be32 reqType;	// == READ || == WRITE 
-	char reqID[8];
+	__be32 type;	// == READ || == WRITE 
+	char ID[HDR_SIZE];
 	__be64 blockNum;
 	char data[0x1000]; //4k of data
 };
@@ -200,7 +200,8 @@ struct request
 struct reply 
 {
 	__be32 status;		// 0 = ok, else error
-	char reqID[8];		// ID you got from request
+	__be32 type;	// == READ || == WRITE 
+	char ID[HDR_SIZE];		// ID you got from request
 	char data[0x1000]; //4k of data
 };
 
