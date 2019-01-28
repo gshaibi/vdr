@@ -9,12 +9,19 @@ echo "Testing vdr for nbd number $1"
 
 make clean
 make vdr
-echo 4 | sudo tee /sys/block/nbd$1/queue/max_sectors_kb
+echo 4 | sudo tee /sys/block/nbd$1/queue/max_sectors_kb 1> /dev/null
 sudo ./vdr.out /dev/nbd$1 10000&
 sleep 1
 sudo mkfs.ext4 /dev/nbd$1
-sudo mount /dev/nbd$1 /mnt
-echo OK | sudo tee /mnt/test_file
+
+if ! sudo mount /dev/nbd$1 /mnt
+then
+	echo
+	echo "FAIL"
+	exit
+fi
+
+echo OK | sudo tee > /mnt/test_file
 cat /mnt/test_file > tmp_result
 sudo umount -l /mnt
 sudo nbd-client -d /dev/nbd$1
