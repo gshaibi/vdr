@@ -110,7 +110,7 @@ int WriteReply::GetStatus() const
 }
 
 
-ReadReply::ReadReply(int minionId_, int status_, const ID& id_,
+ReadReply::ReadReply(const ID& id_, int minionId_, int status_, 
 							  SharedBuffer buff_) : WriteReply(id_, minionId_, status_), m_buff(buff_)
 							  {
 							  }
