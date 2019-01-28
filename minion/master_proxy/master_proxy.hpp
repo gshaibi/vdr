@@ -7,25 +7,29 @@
 #include "protocols.hpp"
 #include "reactor.hpp"
 
-namespace ilrd
+namespace minion
 {
+
+class Minion;
 
 class MasterProxy : boost::noncopyable
 {
 public:
-	explicit MasterProxy(Reactor& r_);
+	explicit MasterProxy(ilrd::Reactor& r_, Minion& m_);
 	// generated dtor
 
-	void ReplyRead(const protocols::ID& id_, int status_, std::vector<char> data_);
-	void ReplyWrite(const protocols::ID& id_, int status_);
+	void ReplyRead(const ilrd::protocols::ID& id_, int status_, std::vector<char> data_);
+	void ReplyWrite(const ilrd::protocols::ID& id_, int status_);
 
 private:
-	static const int SERVER_UDP_PORT = 3000;
+	void OnPacketCB(int fd_);
 
-	void OnPacketCB();
+	static const int SERVER_UDP_PORT = 3000;
+	
+	Minion& m_minion;
 };
 
-} // ilrd
+} // minion
 
 
 #endif // MASTER_PROXY_HPP
