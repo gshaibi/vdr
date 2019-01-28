@@ -2,6 +2,7 @@
 #define MASTER_PROXY_HPP
 
 #include <boost/noncopyable.hpp>
+#include <boost/shared_ptr.hpp>
 #include <vector>
 
 #include "protocols.hpp"
@@ -18,7 +19,7 @@ public:
 	explicit MasterProxy(ilrd::Reactor& r_, Minion& m_);
 	// generated dtor
 
-	void ReplyRead(const ilrd::protocols::ID& id_, int status_, std::vector<char> data_);
+	void ReplyRead(const ilrd::protocols::ID& id_, int status_, boost::shared_ptr< std::vector<char> > data_);
 	void ReplyWrite(const ilrd::protocols::ID& id_, int status_);
 
 private:
@@ -29,7 +30,7 @@ private:
 	Minion& m_minion;
 };
 
-} // minion
+} // namespace minion
 
 
 #endif // MASTER_PROXY_HPP
