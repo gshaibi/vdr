@@ -7,7 +7,7 @@
 #include "protocols.hpp"
 #include "reactor.hpp"
 
-namespace ilrd
+namespace minion
 {
 
 class MasterProxy : boost::noncopyable
@@ -25,7 +25,7 @@ private:
 	void OnPacketCB();
 };
 
-} // ilrd
+} // namespace minion
 
 
 #endif // MASTER_PROXY_HPP
