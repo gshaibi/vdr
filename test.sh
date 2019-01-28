@@ -15,10 +15,10 @@ sleep 3
 sudo mkfs.ext4 /dev/nbd$1
 sudo mount /dev/nbd$1 /mnt
 echo OK | sudo tee /mnt/test_file
-cat /mnt/test_file > result
+cat /mnt/test_file > tmp_result
 sudo umount -l /mnt
 sudo nbd-client -d /dev/nbd$1
 echo
 echo
-cat result
-rm result
+cat tmp_result
+rm tmp_result
