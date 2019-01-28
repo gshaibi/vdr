@@ -5,13 +5,13 @@ if [ "$#" -ne 1 ]; then
   exit 1
 fi
 
-echo "Testing for nbd number $1"
+echo "Testing vdr for nbd number $1"
 
 make clean
-make
+make vdr
 echo 4 | sudo tee /sys/block/nbd$1/queue/max_sectors_kb
-sudo ./a.out /dev/nbd$1 10000&
-sleep 3
+sudo ./vdr.out /dev/nbd$1 10000&
+sleep 1
 sudo mkfs.ext4 /dev/nbd$1
 sudo mount /dev/nbd$1 /mnt
 echo OK | sudo tee /mnt/test_file

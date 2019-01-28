@@ -12,9 +12,11 @@ SHLIBS_PATH=$(patsubst %, -L%, $(SHLIBS_DIRS))
 SHLIBS= app master communication os_proxy protocols boost_thread boost_system boost_chrono
 SHLIBS_LINK=$(patsubst %, -l%, $(SHLIBS))
 
-all: $(SHLIBS_DIRS) a.out
+minion: 
 
-a.out: $(OBJS) 
+vdr: $(SHLIBS_DIRS) vdr.out
+
+vdr.out: $(OBJS) 
 	$(CC) $(CXXFLAGS) $^ $(SHLIBS_PATH) -Wl,-rpath=$(SHLIBS_PATHS_COLLON_SEP)  -o $@ $(SHLIBS_LINK)
 
 $(SHLIBS_DIRS):
