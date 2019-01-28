@@ -24,9 +24,17 @@ public:
 	void WriteRequest(protocols::minion::WriteRequest req_);
 
 private:
-	int m_minionID;
+	void RegisterToReactorIMP();
+	int CreateUDPSocketIMP();
+
+	void RecieveFromMinionCB(int socket_);
+	void SendToMinionIMP(int socket_);
+
+	static const int UDP_PORT =  3000;
+	const int m_minionID;
 	Master& m_master;
 	Reactor& m_reactor;
+	int m_minionSocket;
 };
 
 } //namspace ilrd
