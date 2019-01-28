@@ -8,7 +8,7 @@ int main(int argc, char *argv[])
 {
 	if (argc != 3)
 	{
-		std::cout << "USAGE: ./executable PathToNbd NumBlocks(4kb each)" << std::endl;
+		std::cout << "USAGE: sudo ./executable PathToNbd NumBlocks(4kb each)" << std::endl;
 		return 1;
 	}
 	App a(argv[1], std::atoi(argv[2]));
