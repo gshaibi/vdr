@@ -21,7 +21,7 @@ then
 	exit
 fi
 
-echo OK | sudo tee > /mnt/test_file
+echo OK | sudo tee /mnt/test_file 1> /dev/null
 cat /mnt/test_file > tmp_result
 sudo umount -l /mnt
 sudo nbd-client -d /dev/nbd$1
