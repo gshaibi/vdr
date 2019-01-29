@@ -1,3 +1,9 @@
-*.o
-*.out
-*.so
+*
+!*/
+!*.c
+!*.cpp
+!*.h
+!*.hpp
+!Makefile
+!*.sh
+!*.gitignore
