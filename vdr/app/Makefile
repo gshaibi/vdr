@@ -10,7 +10,7 @@ libapp.so: $(OBJS)
 	$(CC) $(CXXFLAGS) $^ $(SHLIBS) -o $@
 
 clean:
-	-rm *.o *.out *.so
+	$(RM) *.o *.out *.so
 
 .PHONY: clean 
 

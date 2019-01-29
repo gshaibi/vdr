@@ -11,6 +11,7 @@ namespace ilrd
 {
 
 class OsProxy;
+class MinionProxy;
 
 namespace protocols
 {
@@ -27,7 +28,7 @@ public:
 
 private:
     friend class ilrd::OsProxy;
-	//friend class ilrd::MinionProxy;
+		friend class ilrd::MinionProxy;
 
     const char* GetID() const;
 
