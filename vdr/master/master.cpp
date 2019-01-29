@@ -40,13 +40,13 @@ void Master::Read(protocols::os::ReadRequest request_)
 	Log("[Master] Read");
 
 	// Translate the request with BlockTable
-	std::vector<BlockLocation> 
+	std::vector<BlockTable::BlockLocation> 
 		requests(m_blockTable.Translate(request_.GetOffset()));
 	
 	// pass the requests to minion proxys
 	for (size_t i = 0; i < requests.size(); ++i)
 	{
-		BlockLocation curr = requests[i];
+		BlockTable::BlockLocation curr = requests[i];
 		minion::ReadRequest minionRequest(request_, curr.blockOffset);
 
 		// write to log
@@ -66,13 +66,13 @@ void Master::Write(protocols::os::WriteRequest request_)
 	Log("[Master] WriteReq");
 
 	// Translate the request with BlockTable
-	std::vector<BlockLocation> 
+	std::vector<BlockTable::BlockLocation> 
 		requests(m_blockTable.Translate(request_.GetOffset()));
 
 	// pass the requests to minion proxys
 	for (size_t i = 0; i < requests.size(); ++i)
 	{
-		BlockLocation curr = requests[i];
+		BlockTable::BlockLocation curr = requests[i];
 		minion::WriteRequest minionRequest(request_, curr.blockOffset);
 
 		// write to log
@@ -92,7 +92,12 @@ void Master::ReplyReadIMP(protocols::minion::ReadReply reply_)
 
 	os::ReadReply ospReply(reply_.GetID(), reply_.GetStatus(), reply_.GetData());
 	
-	Log("[Master] calling OsProxy::ReplyRead");
+	// write to log
+	stringstream str;
+	str << "[Master] calling OsProxy::ReplyRead | status=" << reply_.GetStatus() \
+	<< "buffer=" << reply_.GetData();
+	Log(str.str());
+
 	m_osPtr->ReplyRead(ospReply);
 }
 
@@ -102,7 +107,11 @@ void Master::ReplyWriteIMP(protocols::minion::WriteReply reply_)
 
 	os::WriteReply ospReply(reply_.GetID(), reply_.GetStatus());
 
-	Log("[Master] calling OsProxy::ReplyWrite");
+	// write to log
+	stringstream str;
+	str << "[Master] calling OsProxy::ReplyWrite | status=" << reply_.GetStatus();
+	Log(str.str());
+
 	m_osPtr->ReplyWrite(ospReply);
 }
 
