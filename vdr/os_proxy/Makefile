@@ -13,5 +13,4 @@ libos_proxy.so: $(OBJS)
 clean:
 	-rm *.o *.out *.so
 
-.PHONY: clean 
-
+.PHONY: clean
