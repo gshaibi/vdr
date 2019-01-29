@@ -12,15 +12,14 @@ using namespace protocols; //os/minion reply/request protocols
 
 /***********************************Master*************************************/
 //ctor//
-Master::Master(size_t nBytes_, size_t nMinions_, size_t blockSize_, Reactor& r_)
+Master::Master(size_t nMinions_, Reactor& r_)
 : m_osPtr(NULL),
 	m_minionProxy(0, *this, r_),
-	m_blockTable(blockSize_) 
+	m_blockTable(BLOCK_SIZE) 
 {
 	// write to log
 	stringstream str;
-	str << "[Master] ctor: numBytes=" << nBytes_ << "numMinions=" << nMinions_ \
-			<< "blockSize=" << blockSize_;
+	str << "[Master] ctor: numMinions=" << nMinions_ << "blockSize=" << BLOCK_SIZE;
 	Log(str.str());
 }
 

@@ -16,7 +16,7 @@ App::App(const std::string& devicePath_, size_t numBlocks_)
 	Reactor r;
 
 	Log("Constructing Master");
-	Master m;
+	Master m(1, r);
 
 	Log("Constructing OsProxy");
 	OsProxy os(r, devicePath_, numBlocks_, m);

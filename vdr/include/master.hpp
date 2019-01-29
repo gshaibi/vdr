@@ -19,7 +19,7 @@ namespace ilrd
 class Master : boost::noncopyable
 {
 public:
-	Master(size_t numBytes_, size_t numMinions_, size_t blockSize_, Reactor& r_); 
+	Master(size_t numMinions_, Reactor& r_); 
 	// NOTE: Object is incomplete before calling SetOsProxy.
 	// using generated dtor. Blocked cctor & op=
 
@@ -33,7 +33,8 @@ private:
 	OsProxy *m_osPtr;
 	MinionProxy m_minionProxy;
 	BlockTable m_blockTable;
-	//TODO: map of sent requests?
+
+	static const size_t BLOCK_SIZE = 4096;
 
 	//friend class//
 	friend class MinionProxy; //for using ReplyReadIMP & ReplyWriteIMP
