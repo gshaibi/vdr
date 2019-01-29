@@ -38,9 +38,9 @@ MinionProxy::~MinionProxy()
 void MinionProxy::ReadReq(ReadRequest req_)
 {
 	ilrd::Log("[MinionProxy] read request");
-
+	UDPRequest request;
 	//fill the request protocol struct
-	UDPRequest request = CreateUdpRequestIMP(protocols::minionUDP::READ, req_.GetID(),
+	CreateUdpRequestIMP(&request, protocols::minionUDP::READ, req_.GetID(),
 											 req_.GetBlock());
 
 	{
@@ -55,8 +55,9 @@ void MinionProxy::ReadReq(ReadRequest req_)
 void MinionProxy::WriteReq(WriteRequest req_)
 {
 	ilrd::Log("[MinionProxy] write request");
+	UDPRequest request;
 	//fill the request protocol struct
-	UDPRequest request = CreateUdpRequestIMP(protocols::minionUDP::WRITE, req_.GetID(),
+	CreateUdpRequestIMP(&request, protocols::minionUDP::WRITE, req_.GetID(),
 											 req_.GetBlock());
 	
 	{
@@ -72,20 +73,18 @@ void MinionProxy::WriteReq(WriteRequest req_)
 	SendRequestIMP(request);
 }
 
-MinionProxy::UDPRequest MinionProxy::CreateUdpRequestIMP(protocols::minionUDP::RequestType type_,
+void MinionProxy::CreateUdpRequestIMP(UDPRequest* req_, protocols::minionUDP::RequestType type_,
 														 const ID &id_,
 														 size_t blockNum_) const
 {
-	UDPRequest request;
 
-	request.type = htonl(type_);
-	memcpy(&request.ID, id_.GetID(), protocols::minionUDP::ID_SIZE);
-	request.blockNum = htobe64(blockNum_);
+	(*req_).type = htonl(type_);
+	memcpy(&(*req_).ID, id_.GetID(), protocols::minionUDP::ID_SIZE);
+	(*req_).blockNum = htobe64(blockNum_);
 
-	return request;
 }
 
-void MinionProxy::SendRequestIMP(UDPRequest req_)
+void MinionProxy::SendRequestIMP(const UDPRequest& req_)
 {
 	//send request to minion
 	if (sizeof(req_) != sendto(m_minionSocket, &req_, sizeof(req_), MSG_DONTWAIT,
