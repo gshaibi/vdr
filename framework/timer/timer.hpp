@@ -34,7 +34,7 @@ private:
 	class TimedCallBack; // foreward declaration
 	std::priority_queue<TimedCallBack> m_pq;
 
-	void ThreadFunc(Sockpair fd);
+	void ThreadFunc(Sockpair fd038163408);
 
 	class TimedCallBack
 	{
