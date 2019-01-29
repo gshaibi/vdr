@@ -1,22 +1,18 @@
-TARGETS=minion minion_app master_proxy
-OBJS=$(patsubst %, %.o, $(TARGETS))
-CC=/usr/bin/g++
-CXXFLAGS=-ansi -std=c++98 -fPIC -pedantic-errors $(INCLUDES) -Wall -Wextra -O0 -g3 
-INCS=../../framework/communication/include/ ../../include/ ../master_proxy/ ../minion/ ../protocols/ ../../vdr/include/ ../include
+CC=g++
+CXXFLAGS=$(INCLUDES) -ansi -std=c++98 -pedantic-errors -Wall -Wextra -O0 -g3 -fPIC -shared 
+INCS=include ../include ../../include ../../vdr/include ../../framework/communication/include ../minion .
 INCLUDES=$(patsubst %, -I%, $(INCS))
-VPATH+=../../framework/communication/ ../master_proxy/ ../minion/ ../../include/
+TARGETS=minion_app 
+OBJS=$(patsubst %, %.o, $(TARGETS))
+SHLIBS=
 
-libminion.so: $(OBJS)
-	$(CC) -shared $^ -o $@
+minion_app.so: $(OBJS)
+	$(CC) $(CXXFLAGS) $^ $(SHLIBS) -o $@
 
+test: master_proxy_test.cpp master_proxy.cpp
+	g++ -g3 $^  $(INCLUDES) $(SHLIBS) -L../../framework/communication -lcommunication -L../../vdr/protocols -lprotocols #-L../minion -lminion
 
-.PHONY: clean remove
 clean:
-	$(RM) *.a *.o *.out core *.hpp.gch *.so
+	-rm *.o *.out *.so
 
-
-# when cross-compiling, use something like this 
-
-#/rpi-tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-g++ 
-#-ansi -Wall -I ~/Downloads/boost_1_62_0 -std=c++11 reactor_test.cpp reactor.cpp 
-#-L pwd -lboost_system -lboost_thread -lboost_filesystem
+.PHONY: clean test 
