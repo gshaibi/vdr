@@ -1,6 +1,10 @@
-TARGETS=
+CXX=g++
+CXXFLAGS=$(INCLUDES) -ansi -std=c++98 -pedantic-errors -Wall -Wextra -O0 -g3 -fPIC -shared 
+INCS=include ../include ../../include
+INCLUDES=$(patsubst %, -I%, $(INCS))
+TARGETS=thread_pool 
 OBJS=$(patsubst %, %.o, $(TARGETS))
-VPATH=$(patsubst %, ../../ds/%, $(TARGETS))
+SHLIBS=-lboost_system -lboost_thread -lboost_chrono -lpthread
 
 #preprocessor flags used in CXXFLAGS
 IPATH=$(patsubst %, -I ../%, $(TARGETS)) -I../include
