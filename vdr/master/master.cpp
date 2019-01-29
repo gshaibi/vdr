@@ -27,6 +27,7 @@ Master::Master(size_t nMinions_, Reactor& r_)
 void Master::SetOsProxy(OsProxy *os_)
 {
 	assert(NULL == m_osPtr); //prevent double set
+	assert(os_ != NULL); 
 
 	Log("[Master] SetOsProxy");
 	m_osPtr = os_;
