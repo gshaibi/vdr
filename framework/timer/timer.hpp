@@ -32,7 +32,7 @@ private:
 	class TimedCallBack; // foreward declaration
 	std::priority_queue<TimedCallBack> m_pq;
 
-	void ThreadFunc();
+	void ThreadFunc(int fd);
 
 	class TimedCallBack
 	{

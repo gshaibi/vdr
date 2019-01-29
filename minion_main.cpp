@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
 {
     if (3 != argc)
     {
-        std::cout << "minion_main()-wrong input, required: <ip> <port>\n";
+        std::cout << "minion_main() wrong input, required: <ip> <port>\n";
         return 1;
     }
     

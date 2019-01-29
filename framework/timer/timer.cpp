@@ -22,7 +22,7 @@ Timer::Handle Timer::Set(duration_type duration_, CallBack_type callback_)
     }
     else
     {
-        m_pq.push(TimedCallBack(duration_ + boost::chrono::steady_clock::now()
+        m_pq.push(TimedCallBack(duration_ + boost::chrono::steady_clock::duration
             , callback_));
     }
     
