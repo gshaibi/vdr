@@ -14,7 +14,7 @@ using namespace protocols; //os/minion reply/request protocols
 //ctor//
 Master::Master(size_t nMinions_, Reactor& r_, const sockaddr_in& minionAddr_)
 : m_osPtr(NULL),
-	m_minionProxy(0, *this, r_),
+	m_minionProxy(0, *this, r_, minionAddr_),
 	m_blockTable(BLOCK_SIZE) 
 {
 	// write to log

@@ -6,6 +6,8 @@
 
 #include <vector> //std::vector
 
+#include <netinet/in.h> // sockaddr_in
+
 #include "protocols.hpp"    //master-minion & master-OSP message protocols
 #include "os_proxy.hpp"     //class OsProxy
 #include "block_table.hpp"  //class BlockTable
@@ -19,7 +21,7 @@ namespace ilrd
 class Master : boost::noncopyable
 {
 public:
-	Master(size_t numMinions_, Reactor& r_); 
+	Master(size_t numMinions_, Reactor& r_, const sockaddr_in&); 
 	// NOTE: Object is incomplete before calling SetOsProxy.
 	// using generated dtor. Blocked cctor & op=
 

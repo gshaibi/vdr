@@ -1,7 +1,6 @@
 #include <iostream>
 #include <cassert>
 
-#include "master_proxy.hpp"
 #include "routines.hpp"
 #include "reactor.hpp"
 #include "os_proxy.hpp"
@@ -19,7 +18,7 @@ App::App(const std::string& devicePath_, size_t numBlocks_)
 
 	sockaddr_in minionAddr;
 	minionAddr.sin_family = AF_INET;
-	minionAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	minionAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 	minionAddr.sin_port = htons(3000);
 
 	Log("Constructing Master");
