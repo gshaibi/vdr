@@ -52,6 +52,8 @@ int Minion::RetriveCopyStatus(dataPtr_type data, int numBlock)
 
 void Minion::Read(ID_type& id_, size_t numBlock)
 {
+    assert(NULL != m_masterProxy);
+
     std::stringstream ss;
     ss << "Minion:: Read. id = " << id_.GetID() << " and numBlock = " << numBlock << std::endl;
     ilrd::Log(ss.str());
@@ -73,6 +75,8 @@ void Minion::Read(ID_type& id_, size_t numBlock)
 
 void Minion::Write(ID_type& id_, size_t numBlock, dataPtr_type data_)
 {
+    assert(NULL != m_masterProxy);
+    
     std::stringstream ss;
     ss << "Minion:: Write. id = " << id_.GetID() << " and numBlock = " << numBlock << std::endl;
     ilrd::Log(ss.str());

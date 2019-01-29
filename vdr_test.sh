@@ -7,6 +7,7 @@ fi
 
 echo "Testing vdr for nbd number $1"
 
+sudo modprobe nbd
 make clean
 make vdr
 echo 4 | sudo tee /sys/block/nbd$1/queue/max_sectors_kb 1> /dev/null
