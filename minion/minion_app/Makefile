@@ -6,7 +6,7 @@ TARGETS=minion_app
 OBJS=$(patsubst %, %.o, $(TARGETS))
 SHLIBS=
 
-minion_app.so: $(OBJS)
+libminion_app.so: $(OBJS)
 	$(CC) $(CXXFLAGS) $^ $(SHLIBS) -o $@
 
 test: master_proxy_test.cpp master_proxy.cpp

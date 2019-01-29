@@ -6,7 +6,7 @@ TARGETS=master_proxy
 OBJS=$(patsubst %, %.o, $(TARGETS))
 SHLIBS=
 
-master_proxy.so: $(OBJS)
+libmaster_proxy.so: $(OBJS)
 	$(CC) $(CXXFLAGS) $^ $(SHLIBS) -o $@
 
 test: master_proxy_test.cpp master_proxy.cpp

@@ -1,7 +1,7 @@
-#CXX=/rpi-tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-g++
+#CXX=/rpi-tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-g++ #Add for raspberry pi
 CXX=g++
 CXXFLAGS=$(INCLUDES) -ansi -std=c++98 -pedantic-errors -Wall -Wextra -O0 -g3 -fPIC -shared
-INCS=include ../include ../../include /home/beyond/Downloads/boost162/
+INCS=include ../include ../../include #/home/beyond/Downloads/boost162/ #Add for raspberry pi
 INCLUDES=$(patsubst %, -I%, $(INCS))
 TARGETS=reactor sockpair tcp_reader tcp_writer
 OBJS=$(patsubst %, %.o, $(TARGETS))
