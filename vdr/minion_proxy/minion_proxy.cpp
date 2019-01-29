@@ -24,14 +24,16 @@ MinionProxy::MinionProxy(int minionID_, Master& master_, Reactor& reactor_):
 	RegisterToReactorIMP();
 }
 
+MinionProxy::~MinionProxy()
+{
+	close(m_minionSocket);
+}
 
-void MinionProxy::ReadRequest(protocols::minion::ReadRequest req_)
+void MinionProxy::ReadRequest(ReadRequest req_)
 {	
-	protocols::minionUDP::request request;
 	//fill the request protocol struct
-	request.type = htonl(protocols::minionUDP::READ);
-	memcpy(&request.ID, req_.GetID().GetID(), protocols::minionUDP::HDR_SIZE);
-	request.blockNum = htobe64(req_.GetBlock());
+	UDPRequest request = CreateUdpRequestIMP(RequestType::READ, req_.GetID(), 
+																req_.GetBlock());
 	
 	//send to minion
 	if(sizeof(request) != sendto(m_minionSocket, &request, sizeof(request), MSG_DONTWAIT, 
@@ -41,22 +43,33 @@ void MinionProxy::ReadRequest(protocols::minion::ReadRequest req_)
 	}
 }
 
-void MinionProxy::WriteRequest(protocols::minion::WriteRequest req_)
+void MinionProxy::WriteRequest(WriteRequest req_)
 {
-	protocols::minionUDP::request request;
 	//fill the request protocol struct
-	request.type = htonl(protocols::minionUDP::WRITE);
-	memcpy(&request.ID, req_.GetID().GetID(), protocols::minionUDP::HDR_SIZE);
-	request.blockNum = htobe64(req_.GetBlock());
+	UDPRequest request = CreateUdpRequestIMP(RequestType::WRITE, req_.GetID(), 
+																req_.GetBlock());
+	//copy the data to the udp request member
 	memcpy(request.data, req_.GetData(), protocols::minionUDP::BLK_SIZE);
 	
 	//send to minion
 	if(sizeof(request) != sendto(m_minionSocket, &request, sizeof(request), MSG_DONTWAIT, 
-																NULL, 0))
+																				NULL, 0))
 	{
 		throw std::runtime_error("[MinionProxy] sendto failed");
 	}
 }
+
+MinionProxy::UDPRequest MinionProxy::CreateUdpRequestIMP(RequestType type_, 
+														const ID& id_, 
+														size_t blockNum_) const
+{
+	UDPRequest request;
+
+	request.type = htonl(type_);
+	memcpy(&request.ID, id_.GetID(), protocols::minionUDP::HDR_SIZE);
+	request.blockNum = htobe64(blockNum_);
+}
+
 
 void MinionProxy::RegisterToReactorIMP()
 {
@@ -88,7 +101,7 @@ int MinionProxy::CreateUDPSocketIMP()
 void MinionProxy::RecieveFromMinionCB(int socket_)
 {
 	int n_bytes = 0;
-	protocols::minionUDP::reply minionRep;
+	UDPReply minionRep;
 
 	//read the udp massage from socket to minionUDP reply struct
 	n_bytes = recvfrom(socket_, &minionRep, sizeof(minionRep), MSG_DONTWAIT, 
@@ -104,7 +117,7 @@ void MinionProxy::RecieveFromMinionCB(int socket_)
 	// case swith on reply type
 	switch (ntohl(minionRep.type))
     {
-    	case protocols::minionUDP::READ:
+    	case RequestType::READ:
         {
 			//create buffer
 			protocols::minion::ReadReply::SharedBuffer buffer(new std::vector<char>(protocols::minionUDP::BLK_SIZE));
@@ -114,15 +127,15 @@ void MinionProxy::RecieveFromMinionCB(int socket_)
 			memcpy(const_cast<char*>(buffer->data()), minionRep.data, protocols::minionUDP::BLK_SIZE);
 
 			//send master the reply 
-			m_master.ReplyRead(protocols::minion::ReadReply(protocols::ID(minionRep.ID), 0, ntohl(minionRep.status), buffer));
+			m_master.ReplyReadIMP(protocols::minion::ReadReply(protocols::ID(minionRep.ID), 0, ntohl(minionRep.status), buffer));
 
        		break;
 		}
 		
-		case protocols::minionUDP::WRITE:
+		case RequestType::WRITE:
 		{
 			//reply to master that write 
-        	m_master.ReplyWrite(protocols::minion::WriteReply(protocols::ID(minionRep.ID), 0, ntohl(minionRep.status)));
+        	m_master.ReplyWriteIMP(protocols::minion::WriteReply(protocols::ID(minionRep.ID), 0, ntohl(minionRep.status)));
 			break;
 		}
 
