@@ -7,12 +7,16 @@
 
 #include <linux/types.h> //using __be64 __be32 in udp protocol
 
+namespace minion
+{
+	class MasterProxy;
+}
+
 namespace ilrd
 {
 
 class OsProxy;
 class MinionProxy;
-class ::minion::MasterProxy;
 
 namespace protocols
 {
