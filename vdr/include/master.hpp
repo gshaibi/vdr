@@ -11,7 +11,6 @@
 #include "block_table.hpp"  //class BlockTable
 #include "minion_proxy.hpp" //clsas MinionProxy
 
-// TODO: const
 // TODO: exception safety
 
 namespace ilrd
@@ -23,11 +22,11 @@ public:
 	Master(size_t numBytes_, size_t numMinions_, size_t blockSize_, Reactor& r_); 
 	// NOTE: Object is incomplete before calling SetOsProxy.
 	// using generated dtor. Blocked cctor & op=
-	
+
 	void SetOsProxy(OsProxy *osp_);
 
-	void Read(protocols::os::ReadRequest req_);
-	void Write(protocols::os::WriteRequest req_);
+	void Read(protocols::os::ReadRequest request_);
+	void Write(protocols::os::WriteRequest request_);
 
 private:
 	//data//
