@@ -33,9 +33,9 @@ void Master::SetOsProxy(OsProxy *os_)
 	m_osPtr = os_;
 }
 
-void Master::Read(protocols::os::ReadRequest req_)
+void Master::Read(protocols::os::ReadRequest request_)
 {
-	assert(m_osProxyPtr != NULL);
+	assert(m_osPtr != NULL);
 
 	Log("[Master] Read");
 
@@ -59,9 +59,9 @@ void Master::Read(protocols::os::ReadRequest req_)
 	}
 }
 
-void Master::Write(protocols::os::WriteRequest req_)
+void Master::Write(protocols::os::WriteRequest request_)
 {
-	assert(m_osProxyPtr != NULL);
+	assert(m_osPtr != NULL);
 
 	Log("[Master] WriteReq");
 
@@ -72,7 +72,7 @@ void Master::Write(protocols::os::WriteRequest req_)
 	// pass the requests to minion proxys
 	for (size_t i = 0; i < requests.size(); ++i)
 	{
-		TranslatedInfo curr = requests[i];
+		BlockLocation curr = requests[i];
 		minion::WriteRequest minionRequest(request_, curr.blockOffset);
 
 		// write to log
@@ -88,7 +88,7 @@ void Master::Write(protocols::os::WriteRequest req_)
 //private methods//
 void Master::ReplyReadIMP(protocols::minion::ReadReply reply_)
 { 
-	assert(m_osProxyPtr != NULL);
+	assert(m_osPtr != NULL);
 
 	os::ReadReply ospReply(reply_.GetID(), reply_.GetStatus(), reply_.GetData());
 	
@@ -98,7 +98,7 @@ void Master::ReplyReadIMP(protocols::minion::ReadReply reply_)
 
 void Master::ReplyWriteIMP(protocols::minion::WriteReply reply_) 
 { 
-	assert(m_osProxyPtr != NULL);
+	assert(m_osPtr != NULL);
 
 	os::WriteReply ospReply(reply_.GetID(), reply_.GetStatus());
 
