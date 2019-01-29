@@ -5,8 +5,11 @@
 #include <boost/shared_ptr.hpp>
 #include <vector>
 
+#include <netinet/in.h> // sockaddr_in
+
 #include "protocols.hpp"
 #include "reactor.hpp"
+#include "routines.hpp"
 
 namespace minion
 {

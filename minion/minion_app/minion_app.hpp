@@ -15,7 +15,7 @@ public:
     static const size_t BLOCK_SIZE = 4096;
     static const size_t NUM_BLOCKS = (128 * 1024 * 1024) / BLOCK_SIZE;
 
-    MinionApp();
+    MinionApp(char* ip, char* port);
 
 private:
 

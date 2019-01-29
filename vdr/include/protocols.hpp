@@ -10,6 +10,7 @@
 namespace minion
 {
 	class MasterProxy;
+    class Minion;
 }
 
 namespace ilrd
@@ -35,6 +36,7 @@ private:
     friend class ilrd::OsProxy;
 	friend class ilrd::MinionProxy;
 	friend class ::minion::MasterProxy;
+	friend class ::minion::Minion;
 
     const char* GetID() const;
 
