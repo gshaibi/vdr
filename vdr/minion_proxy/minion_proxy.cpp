@@ -37,7 +37,7 @@ MinionProxy::~MinionProxy()
 
 void MinionProxy::ReadReq(ReadRequest req_)
 {
-	ilrd::Log("[MinionProxy] recieving read request");
+	ilrd::Log("[MinionProxy] read request");
 
 	//fill the request protocol struct
 	UDPRequest request = CreateUdpRequestIMP(protocols::minionUDP::READ, req_.GetID(),
@@ -54,7 +54,7 @@ void MinionProxy::ReadReq(ReadRequest req_)
 
 void MinionProxy::WriteReq(WriteRequest req_)
 {
-	ilrd::Log("[MinionProxy] recieving write request");
+	ilrd::Log("[MinionProxy] write request");
 	//fill the request protocol struct
 	UDPRequest request = CreateUdpRequestIMP(protocols::minionUDP::WRITE, req_.GetID(),
 											 req_.GetBlock());
