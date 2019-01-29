@@ -114,7 +114,7 @@ void MinionProxy::RecieveFromMinionCB(int socket_)
 			memcpy(const_cast<char*>(buffer->data()), minionRep.data, protocols::minionUDP::BLK_SIZE);
 
 			//send master the reply 
-			m_master.ReplyRead(protocols::minion::ReadReply(protocols::ID(minionRep.ID), 0, ntohl(minionRep.status), buffer));
+			m_master.ReplyReadIMP(protocols::minion::ReadReply(protocols::ID(minionRep.ID), 0, ntohl(minionRep.status), buffer));
 
        		break;
 		}
@@ -122,7 +122,7 @@ void MinionProxy::RecieveFromMinionCB(int socket_)
 		case protocols::minionUDP::WRITE:
 		{
 			//reply to master that write 
-        	m_master.ReplyWrite(protocols::minion::WriteReply(protocols::ID(minionRep.ID), 0, ntohl(minionRep.status)));
+        	m_master.ReplyWriteIMP(protocols::minion::WriteReply(protocols::ID(minionRep.ID), 0, ntohl(minionRep.status)));
 			break;
 		}
 
