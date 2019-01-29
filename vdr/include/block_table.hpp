@@ -8,11 +8,21 @@
 namespace ilrd
 {
 
+
+
 class BlockTable : private boost::noncopyable
 {
 public:
-    BlockTable::BlockTable(size_t blockSize_);
-    std::vector<BlockLocation> BlockTable::Translate(size_t offset_) const
+
+	struct BlockLocation
+	{
+		size_t minionID;
+		size_t blockOffset;
+	};
+
+    BlockTable(size_t blockSize_);
+    std::vector<BlockLocation> Translate(size_t offset_) const;
+
 
 private:
 	size_t m_blockSize;

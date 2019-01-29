@@ -27,8 +27,7 @@ private:
 	void RegisterToReactorIMP();
 	int CreateUDPSocketIMP();
 
-	void RecieveFromMinionCB(int socket_);
-	void SendToMinionIMP(int socket_);
+	void RecieveFromMinionCB(int socket_); //reactor callback
 
 	static const int UDP_PORT =  3000;
 	const int m_minionID;
