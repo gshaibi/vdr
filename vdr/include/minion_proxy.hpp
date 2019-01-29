@@ -36,6 +36,7 @@ private:
 	void RegisterToReactorIMP();
 	int CreateUDPSocketIMP();
 	UDPRequest CreateUdpRequestIMP(protocols::minionUDP::RequestType type_, const ID& id_, size_t blockNum_) const;
+	void SendRequestIMP(UDPRequest req_);
 
 	void RecieveFromMinionCB(int socket_); //reactor callback
 

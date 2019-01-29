@@ -12,6 +12,7 @@ namespace ilrd
 
 class OsProxy;
 class MinionProxy;
+class ::minion::MasterProxy;
 
 namespace protocols
 {
@@ -28,7 +29,8 @@ public:
 
 private:
     friend class ilrd::OsProxy;
-		friend class ilrd::MinionProxy;
+	friend class ilrd::MinionProxy;
+	friend class ::minion::MasterProxy;
 
     const char* GetID() const;
 
@@ -180,7 +182,7 @@ namespace minionUDP
 
 //block size
 static const int BLK_SIZE = 0x1000; //protocol predefined block size (4k)
-static const int HDR_SIZE = 0x8; //protocol predefined block size (4k)
+static const int ID_SIZE = 0x8; //protocol predefined ID size.
 //request types
 enum RequestType
 {
@@ -192,9 +194,9 @@ enum RequestType
 struct request 
 {
 	__be32 type;	// == READ || == WRITE 
-	char ID[HDR_SIZE];
+	char ID[ID_SIZE];
 	__be64 blockNum;
-	char data[0x1000]; //4k of data
+	char data[BLK_SIZE]; //4k of data
 };
 
 // Reply 
@@ -202,8 +204,8 @@ struct reply
 {
 	__be32 status;		// 0 = ok, else error
 	__be32 type;	// == READ || == WRITE 
-	char ID[HDR_SIZE];		// ID you got from request
-	char data[0x1000]; //4k of data
+	char ID[ID_SIZE];		// ID you got from request
+	char data[BLK_SIZE]; //4k of data
 };
 
 } //namespace minionUDP
