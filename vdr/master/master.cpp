@@ -1,56 +1,109 @@
-#include <cassert>
-#include <iostream>
+#include <cassert>	// assert
 
 #include "logger.hpp"
 #include "master.hpp"
-#include "protocols.hpp"
 #include "routines.hpp"
 
 namespace ilrd
 {
 
-Master::Master() : m_os(), m_disk(static_cast<char*>(operator new(10000000000)))
+using namespace std; 			 //STL
+using namespace protocols; //os/minion reply/request protocols
+
+/***********************************Master*************************************/
+//ctor//
+Master::Master(size_t nBytes_, size_t nMinions_, size_t blockSize_, Reactor& r_)
+: m_osPtr(NULL),
+	m_minionProxy(0, *this, r_),
+	m_blockTable(blockSize_) 
 {
-    Log("Constructing Master");
+	// write to log
+	stringstream str;
+	str << "[Master] ctor: numBytes=" << nBytes_ << "numMinions=" << nMinions_ \
+			<< "blockSize=" << blockSize_;
+	Log(str.str());
 }
 
-void Master::SetOsProxy(OsProxy* os_)
+//public methods//
+void Master::SetOsProxy(OsProxy *os_)
 {
-    Log("Setting Master's OsProxy");
-    m_os = os_;
+	assert(NULL == m_osPtr); //prevent double set
+
+	Log("[Master] SetOsProxy");
+	m_osPtr = os_;
 }
 
 void Master::Read(protocols::os::ReadRequest req_)
 {
-    Log("In Master::Read()");
+	assert(m_osProxyPtr != NULL);
 
-    boost::shared_ptr<std::vector<char> > data(
-        new std::vector<char>(req_.GetLen()));
+	Log("[Master] Read");
 
-    DEBUG(std::cerr << "***************Read request of " << req_.GetLen()
-                    << " bytes from offset " << req_.GetOffset() << std::endl
-                    << "Reading from address " << data->data() << std::endl;)
+	// Translate the request with BlockTable
+	std::vector<BlockLocation> 
+		requests(m_blockTable.Translate(request_.GetOffset()));
+	
+	// pass the requests to minion proxys
+	for (size_t i = 0; i < requests.size(); ++i)
+	{
+		BlockLocation curr = requests[i];
+		minion::ReadRequest minionRequest(request_, curr.blockOffset);
 
-    std::memcpy(&((*data)[0]), m_disk + req_.GetOffset(), req_.GetLen());
-
-    Log("Replying protocols::os::ReadReply back to nbd");
-    ReplyRead(protocols::os::ReadReply(req_.GetID(), 0, data));
+		// write to log
+		stringstream str;
+		str << "[Master] calling MinionProxy::ReadRequest | minionID=" << \
+		curr.minionID << "block=" << curr.blockOffset;
+	 	Log(str.str()); 
+		
+		m_minionProxy.ReadRequest(minionRequest);
+	}
 }
 
 void Master::Write(protocols::os::WriteRequest req_)
 {
-    Log("In Master::Write()");
+	assert(m_osProxyPtr != NULL);
 
-    DEBUG(std::cerr << "***************Write request of " << req_.GetLength()
-                    << " bytes from offset " << req_.GetOffset() << std::endl;)
+	Log("[Master] WriteReq");
 
-    std::memcpy(m_disk + req_.GetOffset(), req_.GetData(), req_.GetLength());
+	// Translate the request with BlockTable
+	std::vector<BlockLocation> 
+		requests(m_blockTable.Translate(request_.GetOffset()));
 
-    ReplyWrite(protocols::os::WriteReply(req_.GetID(), 0));
+	// pass the requests to minion proxys
+	for (size_t i = 0; i < requests.size(); ++i)
+	{
+		TranslatedInfo curr = requests[i];
+		minion::WriteRequest minionRequest(request_, curr.blockOffset);
+
+		// write to log
+		stringstream str;
+		str << "[Master] calling MinionProxy::WriteRequest | minionID=" << \
+		curr.minionID << "block=" << curr.blockOffset;
+	 	Log(str.str()); 
+	
+		m_minionProxy.WriteRequest(minionRequest);
+	}
 }
 
-void Master::ReplyRead(protocols::os::ReadReply reply_) { m_os->ReplyRead(reply_); }
+//private methods//
+void Master::ReplyReadIMP(protocols::minion::ReadReply reply_)
+{ 
+	assert(m_osProxyPtr != NULL);
 
-void Master::ReplyWrite(protocols::os::WriteReply reply_) { m_os->ReplyWrite(reply_); }
+	os::ReadReply ospReply(reply_.GetID(), reply_.GetStatus(), reply_.GetData());
+	
+	Log("[Master] calling OsProxy::ReplyRead");
+	m_osPtr->ReplyRead(ospReply);
+}
+
+void Master::ReplyWriteIMP(protocols::minion::WriteReply reply_) 
+{ 
+	assert(m_osProxyPtr != NULL);
+
+	os::WriteReply ospReply(reply_.GetID(), reply_.GetStatus());
+
+	Log("[Master] calling OsProxy::ReplyWrite");
+	m_osPtr->ReplyWrite(ospReply);
+}
 
 } // namespace ilrd

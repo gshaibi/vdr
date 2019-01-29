@@ -1,8 +1,18 @@
 #ifndef MASTER_HPP
 #define MASTER_HPP
 
-#include "os_proxy.hpp"
-// #include "block_table.hpp"
+#include <boost/noncopyable.hpp> //boost::noncopyable
+#include <boost/shared_ptr.hpp>  //boost::shared_ptr
+
+#include <vector> //std::vector
+
+#include "protocols.hpp"    //master-minion & master-OSP message protocols
+#include "os_proxy.hpp"     //class OsProxy
+#include "block_table.hpp"  //class BlockTable
+#include "minion_proxy.hpp" //clsas MinionProxy
+
+// TODO: const
+// TODO: exception safety
 
 namespace ilrd
 {
@@ -10,21 +20,29 @@ namespace ilrd
 class Master : boost::noncopyable
 {
 public:
-    Master(/* size_t numBlocks_ ,size_t numMinions_ */); // Object is incomplete before calling SetOsProxy.
+	Master(size_t numBytes_, size_t numMinions_, size_t blockSize_, Reactor& r_); 
+	// NOTE: Object is incomplete before calling SetOsProxy.
+	// using generated dtor. Blocked cctor & op=
+	
+	void SetOsProxy(OsProxy *osp_);
 
-    void SetOsProxy(OsProxy* os_);
-
-    void Read(protocols::os::ReadRequest req_);
-    void Write(protocols::os::WriteRequest req_);
-
-    void ReplyRead(protocols::os::ReadReply reply_);
-    void ReplyWrite(protocols::os::WriteReply reply_);
+	void Read(protocols::os::ReadRequest req_);
+	void Write(protocols::os::WriteRequest req_);
 
 private:
-	// friend class BlockTable;
-    OsProxy* m_os;
-    char* m_disk;
-};
+	//data//
+	OsProxy *m_osPtr;
+	MinionProxy m_minionProxy;
+	BlockTable m_blockTable;
+	//TODO: map of sent requests?
+
+	//friend class//
+	friend class MinionProxy; //for using ReplyReadIMP & ReplyWriteIMP
+
+	//private methods//
+	void ReplyReadIMP(protocols::minion::ReadReply reply_);
+	void ReplyWriteIMP(protocols::minion::WriteReply reply_);
+};//class Master
 
 } // namespace ilrd
 
