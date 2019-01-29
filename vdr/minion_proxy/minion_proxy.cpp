@@ -33,13 +33,8 @@ void MinionProxy::ReadReq(ReadRequest req_)
 	//fill the request protocol struct
 	UDPRequest request = CreateUdpRequestIMP(protocols::minionUDP::READ, req_.GetID(),
 											 req_.GetBlock());
-
-	//send to minion
-	if (sizeof(request) != sendto(m_minionSocket, &request, sizeof(request), MSG_DONTWAIT,
-								  NULL, 0))
-	{
-		throw std::runtime_error("[MinionProxy] sendto failed");
-	}
+	//send request to minion
+	SendRequestIMP(request);
 }
 
 void MinionProxy::WriteReq(WriteRequest req_)
@@ -50,12 +45,8 @@ void MinionProxy::WriteReq(WriteRequest req_)
 	//copy the data to the udp request member
 	memcpy(request.data, req_.GetData(), protocols::minionUDP::BLK_SIZE);
 
-	//send to minion
-	if (sizeof(request) != sendto(m_minionSocket, &request, sizeof(request), MSG_DONTWAIT,
-								  NULL, 0))
-	{
-		throw std::runtime_error("[MinionProxy] sendto failed");
-	}
+	//send request to minion
+	SendRequestIMP(request);
 }
 
 MinionProxy::UDPRequest MinionProxy::CreateUdpRequestIMP(protocols::minionUDP::RequestType type_,
@@ -70,6 +61,17 @@ MinionProxy::UDPRequest MinionProxy::CreateUdpRequestIMP(protocols::minionUDP::R
 
 	return request;
 }
+
+void MinionProxy::SendRequestIMP(UDPRequest req_)
+{
+	//send request to minion
+	if (sizeof(req_) != sendto(m_minionSocket, &req_, sizeof(req_), MSG_DONTWAIT,
+								  NULL, 0))
+	{
+		throw std::runtime_error("[MinionProxy] sendto failed");
+	}
+}
+
 
 void MinionProxy::RegisterToReactorIMP()
 {
