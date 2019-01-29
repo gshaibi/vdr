@@ -1,6 +1,8 @@
 #ifndef MINION_PROXY_HPP
 #define MINION_PROXY_HPP
 
+#include <netinet/ip.h> /* struct sockaddr_in */
+
 #include <vector> //using std::vector
 
 #include <boost/noncopyable.hpp> //using boost::noncopyable
@@ -20,7 +22,7 @@ public:
 // Minion Proxy Write/Read Rquest methods might throw runtime_error in case of 
 // a network operation faliuere (e.g - send)
 
-	MinionProxy(int minionID_, Master& master_, Reactor& reac_);
+	MinionProxy(int minionID_, Master& master_, Reactor& reac_, const sockaddr_in& minionAddr_);
 	~MinionProxy(); //close udp socket
 	
 	void ReadReq(protocols::minion::ReadRequest req_);
@@ -45,6 +47,7 @@ private:
 	Master& m_master;
 	Reactor& m_reactor;
 	int m_minionSocket;
+	sockaddr_in m_minionAddr;
 };
 
 } //namspace ilrd
