@@ -38,8 +38,14 @@ MasterProxy::MasterProxy(ilrd::Reactor& r_, Minion& m_, const sockaddr_in& vdrAd
     minionAddr.sin_addr.s_addr = htonl(INADDR_ANY);
     minionAddr.sin_port = htons(INCOME_UDP_PORT);
 
+	int enable = 1;
+	if (setsockopt(m_udpSock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+    {
+		ilrd::Log("setsockopt(SO_REUSEADDR) failed");
+	}
+
     ilrd::Log("Binding udp socket to minion address");
-    if (!bind(m_udpSock, (sockaddr*)(&minionAddr), sizeof(minionAddr)))
+    if (0 != bind(m_udpSock, (sockaddr*)(&minionAddr), sizeof(minionAddr)))
     {
 		ilrd::Log("Failed binding address to socket.");
 		close(m_udpSock);

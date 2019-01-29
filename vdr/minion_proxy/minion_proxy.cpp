@@ -122,6 +122,12 @@ int MinionProxy::CreateUDPSocketIMP()
 	udpIncome.sin_addr.s_addr = htonl(INADDR_ANY);
 	udpIncome.sin_port = htons(UDP_PORT);
 
+	int enable = 1;
+	if (setsockopt(udpSock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+    {
+		ilrd::Log("setsockopt(SO_REUSEADDR) failed");
+	}
+
 	ilrd::Log("[MinionProxy] Binding udp socket to minion address");
 	if (-1 == bind(udpSock, (sockaddr *)&udpIncome, sizeof(udpIncome)))
 	{
