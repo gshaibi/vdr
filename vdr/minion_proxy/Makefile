@@ -7,7 +7,10 @@ TARGETS=minion_proxy minion_proxy_test
 OBJS=$(patsubst %, %.o, $(TARGETS))
 SHLIBS_DIRS=../protocols ../../framework/communication ../master ../os_proxy 
 SHLIBS_PATH=$(patsubst %, -L%, $(SHLIBS_DIRS))
-SHLIBS=-lmaster -los_proxy -lpthread -lboost_thread -lboost_system -lprotocols -lcommunication  
+SHLIBS=master os_proxy pthread boost_thread boost_system protocols communication  
+SHLIBS_L=$(patsubst %, -l%, $(SHLIBS))
+SHLIBS_DEPENDENCIES=$(patsubst %, -l%, $(SHLIBS))
+
 
 libminion_proxy.so: $(OBJS)
 	$(CC) $(CPPFLAGS) $^ $(SHLIBS) -o $@

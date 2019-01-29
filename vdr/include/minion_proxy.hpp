@@ -23,20 +23,19 @@ public:
 	MinionProxy(int minionID_, Master& master_, Reactor& reac_);
 	~MinionProxy(); //close udp socket
 	
-	void ReadRequest(protocols::minion::ReadRequest req_);
-	void WriteRequest(protocols::minion::WriteRequest req_);
+	void ReadReq(protocols::minion::ReadRequest req_);
+	void WriteReq(protocols::minion::WriteRequest req_);
 
 private:
 	typedef protocols::minionUDP::request UDPRequest;
 	typedef protocols::minionUDP::reply UDPReply;
 	typedef protocols::minion::ReadRequest ReadRequest; 
 	typedef protocols::minion::WriteRequest WriteRequest;
-	typedef protocols::minionUDP::RequestType RequestType;
 	typedef protocols::ID ID;
 
 	void RegisterToReactorIMP();
 	int CreateUDPSocketIMP();
-	UDPRequest CreateUdpRequestIMP(RequestType type_, const ID& id_, size_t blockNum_) const;
+	UDPRequest CreateUdpRequestIMP(protocols::minionUDP::RequestType type_, const ID& id_, size_t blockNum_) const;
 
 	void RecieveFromMinionCB(int socket_); //reactor callback
 
