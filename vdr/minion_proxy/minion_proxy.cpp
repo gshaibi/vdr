@@ -45,7 +45,7 @@ void MinionProxy::ReadReq(ReadRequest req_)
 
 	{
 		std::stringstream msg;
-		msg << "[MinionProxy] write request to block number - " << req_.GetBlock() <<std::endl;
+		msg << "[MinionProxy] read request to block number - " << req_.GetBlock() <<std::endl;
 		ilrd::Log(msg.str());
 	}
 	//send request to minion
