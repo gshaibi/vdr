@@ -196,7 +196,7 @@ struct request
 	__be32 type;	// == READ || == WRITE 
 	char ID[ID_SIZE];
 	__be64 blockNum;
-	char data[0x1000]; //4k of data
+	char data[BLK_SIZE]; //4k of data
 };
 
 // Reply 
@@ -205,7 +205,7 @@ struct reply
 	__be32 status;		// 0 = ok, else error
 	__be32 type;	// == READ || == WRITE 
 	char ID[ID_SIZE];		// ID you got from request
-	char data[0x1000]; //4k of data
+	char data[BLK_SIZE]; //4k of data
 };
 
 } //namespace minionUDP
