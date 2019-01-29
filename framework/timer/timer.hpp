@@ -6,6 +6,7 @@
 #include <boost/function.hpp>
 #include <queue>
 
+#include "sockpair.hpp"
 #include "reactor.hpp"
 
 namespace ilrd
@@ -20,19 +21,20 @@ public:
 
 	//returns handle to be used in Cancel.
 	typedef int Handle;
-	typedef const boost::chrono::steady_clock::duration& duration_type;
+	typedef const boost::chrono::steady_clock::time_point& duration_type;
 	typedef boost::function<void ()> CallBack_type;
 
-	Handle Set(duration_type duration_, CallBack_type callback_);
+	Handle Set(boost::chrono::steady_clock::duration& duration_, CallBack_type callback_);
 	void Cancel(Handle handle_);
 
 private:
 	Reactor& m_r;
-	
+	Sockpair m_sockets;
+
 	class TimedCallBack; // foreward declaration
 	std::priority_queue<TimedCallBack> m_pq;
 
-	void ThreadFunc(int fd);
+	void ThreadFunc(Sockpair fd038163408);
 
 	class TimedCallBack
 	{
