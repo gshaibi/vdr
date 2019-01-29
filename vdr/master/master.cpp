@@ -54,7 +54,7 @@ void Master::Read(protocols::os::ReadRequest request_)
 		curr.minionID << "block=" << curr.blockOffset;
 	 	Log(str.str()); 
 		
-		m_minionProxy.ReadRequest(minionRequest);
+		m_minionProxy.ReadReq(minionRequest);
 	}
 }
 
@@ -80,7 +80,7 @@ void Master::Write(protocols::os::WriteRequest request_)
 		curr.minionID << "block=" << curr.blockOffset;
 	 	Log(str.str()); 
 	
-		m_minionProxy.WriteRequest(minionRequest);
+		m_minionProxy.WriteReq(minionRequest);
 	}
 }
 

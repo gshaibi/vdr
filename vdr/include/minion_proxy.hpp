@@ -17,15 +17,26 @@ class Master;
 class MinionProxy :private boost::noncopyable
 {
 public:
+// Minion Proxy Write/Read Rquest methods might throw runtime_error in case of 
+// a network operation faliuere (e.g - send)
+
 	MinionProxy(int minionID_, Master& master_, Reactor& reac_);
-	~MinionProxy(); //delete memory
+	~MinionProxy(); //close udp socket
 	
-	void ReadRequest(protocols::minion::ReadRequest req_);
-	void WriteRequest(protocols::minion::WriteRequest req_);
+	void ReadReq(protocols::minion::ReadRequest req_);
+	void WriteReq(protocols::minion::WriteRequest req_);
 
 private:
+	typedef protocols::minionUDP::request UDPRequest;
+	typedef protocols::minionUDP::reply UDPReply;
+	typedef protocols::minion::ReadRequest ReadRequest; 
+	typedef protocols::minion::WriteRequest WriteRequest;
+	typedef protocols::ID ID;
+
 	void RegisterToReactorIMP();
 	int CreateUDPSocketIMP();
+	UDPRequest CreateUdpRequestIMP(protocols::minionUDP::RequestType type_, const ID& id_, size_t blockNum_) const;
+	void SendRequestIMP(UDPRequest req_);
 
 	void RecieveFromMinionCB(int socket_); //reactor callback
 

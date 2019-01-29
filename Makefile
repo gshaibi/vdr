@@ -6,10 +6,10 @@ INCS=include/ vdr/app/ vdr/include/ framework/communication/include/
 INCLUDES=$(patsubst %, -I%, $(INCS))
 TARGETS=main
 OBJS=$(patsubst %, %.o, $(TARGETS))
-SHLIBS_DIRS=vdr/app vdr/master framework/communication vdr/os_proxy vdr/protocols
+SHLIBS_DIRS=vdr/app vdr/master framework/communication vdr/os_proxy vdr/protocols vdr/minion_proxy vdr/block_table
 SHLIBS_PATHS_COLLON_SEP=$(subst $(space),:,$(SHLIBS_DIRS))
 SHLIBS_PATH=$(patsubst %, -L%, $(SHLIBS_DIRS))
-SHLIBS= app master communication os_proxy protocols boost_thread boost_system boost_chrono
+SHLIBS= app master communication os_proxy protocols boost_thread boost_system boost_chrono minion_proxy block_table
 SHLIBS_LINK=$(patsubst %, -l%, $(SHLIBS))
 
 minion: 

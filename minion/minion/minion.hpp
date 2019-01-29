@@ -21,19 +21,22 @@ public:
     explicit Minion(size_t numBlocks);
     ~Minion();
 
-    void SetMasterProxy(const MasterProxy* mp_);
+    void SetMasterProxy(MasterProxy* mp_);
 
     void Read(const ilrd::protocols::ID& id_, size_t numBlock);
     void Write(const ilrd::protocols::ID& id_, size_t numBlock, boost::shared_ptr< std::vector<char> > data_);
 
 private:
 
-    typedef std::vector<char> vector_type;
-    typedef boost::shared_ptr< vector_type > dataPtr_type; 
+    typedef const ilrd::protocols::ID ID_type;
+    typedef std::vector<char> container_type;
+    typedef boost::shared_ptr< container_type > dataPtr_type; 
 
     static const size_t BLOCK_SIZE = 4096;
 
-    MasterProxy* m_masterProxy;
+    int RetriveCopyStatus(dataPtr_type data, int numBlock);
+
+    MasterProxy *m_masterProxy;
     char *m_allocMemory;
 };
 
