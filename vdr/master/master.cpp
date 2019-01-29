@@ -19,7 +19,7 @@ Master::Master(size_t nMinions_, Reactor& r_)
 {
 	// write to log
 	stringstream str;
-	str << "[Master] ctor: numMinions=" << nMinions_ << "blockSize=" << BLOCK_SIZE;
+	str << "[Master] ctor: numMinions=" << nMinions_ << " blockSize=" << BLOCK_SIZE;
 	Log(str.str());
 }
 
@@ -51,7 +51,7 @@ void Master::Read(protocols::os::ReadRequest request_)
 		// write to log
 		stringstream str;
 		str << "[Master] calling MinionProxy::ReadRequest | minionID=" << \
-		curr.minionID << "block=" << curr.blockOffset;
+		curr.minionID << " block=" << curr.blockOffset;
 	 	Log(str.str()); 
 		
 		m_minionProxy.ReadReq(minionRequest);
@@ -77,7 +77,7 @@ void Master::Write(protocols::os::WriteRequest request_)
 		// write to log
 		stringstream str;
 		str << "[Master] calling MinionProxy::WriteRequest | minionID=" << \
-		curr.minionID << "block=" << curr.blockOffset;
+		curr.minionID << " block=" << curr.blockOffset;
 	 	Log(str.str()); 
 	
 		m_minionProxy.WriteReq(minionRequest);
@@ -94,7 +94,7 @@ void Master::ReplyReadIMP(protocols::minion::ReadReply reply_)
 	// write to log
 	stringstream str;
 	str << "[Master] calling OsProxy::ReplyRead | status=" << reply_.GetStatus() \
-	<< "buffer=" << reply_.GetData();
+	<< " buffer=" << reply_.GetData();
 	Log(str.str());
 
 	m_osPtr->ReplyRead(ospReply);

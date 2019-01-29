@@ -3,6 +3,7 @@
 #include <sys/socket.h> //using socket
 #include <cstring>		//using memcpy
 #include <cstdio>		//using perror
+#include <cerrno>		//errno
 
 #include <boost/bind.hpp> //using boost bind
 
@@ -68,6 +69,7 @@ void MinionProxy::SendRequestIMP(UDPRequest req_)
 	if (sizeof(req_) != sendto(m_minionSocket, &req_, sizeof(req_), MSG_DONTWAIT,
 								  NULL, 0))
 	{
+		perror("ERROR:");
 		throw std::runtime_error("[MinionProxy] sendto failed");
 	}
 }
@@ -94,6 +96,7 @@ int MinionProxy::CreateUDPSocketIMP()
 
 	if (-1 == bind(udpSock, (sockaddr *)&udpIncome, sizeof(udpIncome)))
 	{
+		perror("ERROR:");
 		throw std::runtime_error("[MinionProxy] bind socket failed");
 	}
 
