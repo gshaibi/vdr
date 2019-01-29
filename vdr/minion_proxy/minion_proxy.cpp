@@ -3,6 +3,7 @@
 #include <sys/socket.h> //using socket
 #include <cstring>		//using memcpy
 #include <cstdio>		//using perror
+#include <cerrno>		//errno
 
 #include <boost/bind.hpp> //using boost bind
 

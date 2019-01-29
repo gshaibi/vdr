@@ -42,7 +42,7 @@ private:
 
 	void RecieveFromMinionCB(int socket_); //reactor callback
 
-	static const int UDP_PORT =  3000;
+	static const int UDP_PORT = 5000;
 	const int m_minionID;
 	Master& m_master;
 	Reactor& m_reactor;

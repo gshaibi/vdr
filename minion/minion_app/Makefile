@@ -6,11 +6,11 @@ TARGETS=minion_app
 OBJS=$(patsubst %, %.o, $(TARGETS))
 SHLIBS=
 
-minion_app.so: $(OBJS)
+libminion_app.so: $(OBJS)
 	$(CC) $(CXXFLAGS) $^ $(SHLIBS) -o $@
 
 test: master_proxy_test.cpp master_proxy.cpp
-	g++ -g3 $^  $(INCLUDES) $(SHLIBS) -L../../framework/communication -lcommunication -L../../vdr/protocols -lprotocols #-L../minion -lminion
+	g++ -g3 $^  $(INCLUDES) $(SHLIBS) -L../../framework/communication -lcommunication -L../../vdr/protocols -lprotocols
 
 clean:
 	-rm *.o *.out *.so

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <boost/bind.hpp>
 #include <sstream> 
+#include <cerrno> // errno
 
 #include <netinet/ip.h> //sockaddr_in
 #include <sys/socket.h>
