@@ -8,9 +8,11 @@ fi
 echo "Testing vdr for nbd number $1"
 
 sudo modprobe nbd
-make clean
 make vdr
+make minion
 echo 4 | sudo tee /sys/block/nbd$1/queue/max_sectors_kb 1> /dev/null
+sudo ./minion.out 1 2&
+sleep 1
 sudo ./vdr.out /dev/nbd$1 10000&
 sleep 1
 sudo mkfs.ext4 /dev/nbd$1

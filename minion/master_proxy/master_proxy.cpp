@@ -38,8 +38,14 @@ MasterProxy::MasterProxy(ilrd::Reactor& r_, Minion& m_, const sockaddr_in& vdrAd
     minionAddr.sin_addr.s_addr = htonl(INADDR_ANY);
     minionAddr.sin_port = htons(INCOME_UDP_PORT);
 
+	int enable = 1;
+	if (setsockopt(m_udpSock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
+    {
+		ilrd::Log("setsockopt(SO_REUSEADDR) failed");
+	}
+
     ilrd::Log("Binding udp socket to minion address");
-    if (!bind(m_udpSock, (sockaddr*)(&minionAddr), sizeof(minionAddr)))
+    if (0 != bind(m_udpSock, (sockaddr*)(&minionAddr), sizeof(minionAddr)))
     {
 		ilrd::Log("Failed binding address to socket.");
 		close(m_udpSock);
@@ -57,6 +63,8 @@ MasterProxy::~MasterProxy() noexcept
 
 void MasterProxy::ReplyRead(const ilrd::protocols::ID& id_, int status_, boost::shared_ptr< std::vector<char> > dataPtr_)
 {
+	ilrd::Log("MasterProxy: Replying read to master");
+
 	ilrd::protocols::minionUDP::reply rep; 
 	ConstructReplyImp(&rep, id_, ilrd::protocols::minionUDP::READ, status_);
 	std::memcpy(rep.data, dataPtr_->data(), sizeof(rep.data));
@@ -66,6 +74,8 @@ void MasterProxy::ReplyRead(const ilrd::protocols::ID& id_, int status_, boost::
 
 void MasterProxy::ReplyWrite(const ilrd::protocols::ID& id_, int status_)
 {
+	ilrd::Log("MasterProxy: Replying write to master");
+
 	ilrd::protocols::minionUDP::reply rep;
 	ConstructReplyImp(&rep, id_, ilrd::protocols::minionUDP::WRITE, status_);
 	SendReplyImp(rep);
@@ -81,7 +91,11 @@ void MasterProxy::ConstructReplyImp(ilrd::protocols::minionUDP::reply* rep_,
 
 void MasterProxy::SendReplyImp(const ilrd::protocols::minionUDP::reply& rep_)
 {
-	sendto(m_udpSock, &rep_, sizeof(rep_), MSG_DONTWAIT, (sockaddr *)&m_vdrAddr, sizeof(m_vdrAddr));
+	if (sizeof (rep_) != sendto(m_udpSock, &rep_, sizeof(rep_), MSG_DONTWAIT, (sockaddr *)&m_vdrAddr, sizeof(m_vdrAddr)))
+	{
+		ilrd::Log("Error sending reply to master");
+		throw std::runtime_error("");
+	}
 }
 
 void MasterProxy::OnPacketCB(int fd_)
