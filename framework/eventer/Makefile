@@ -1,6 +1,6 @@
 CXX=g++
 CXXFLAGS=$(INCLUDES) -ansi -std=c++98 -pedantic-errors -Wall -Wextra -O0 -g3 -fPIC -shared 
-INCS=include ../include ../../include
+INCS=include ../include ../../include ../communication/include
 INCLUDES=$(patsubst %, -I%, $(INCS))
 TARGETS=eventer 
 OBJS=$(patsubst %, %.o, $(TARGETS))
