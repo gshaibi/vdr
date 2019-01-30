@@ -21,7 +21,7 @@ Eventer::Eventer(Reactor& reactor_):
 									m_eventsLock()
 {
 	//create pipe
-	//save both ends of the pipe (in m_pipe)
+	//save both ends of the pipe 
 	if(-1 == pipe2(m_pipe, O_NONBLOCK))
 	{
 		ilrd::Log("[Eventer] create pipe failed");
@@ -31,6 +31,18 @@ Eventer::Eventer(Reactor& reactor_):
 
 Eventer::~Eventer()
 {
+	ilrd::Log("[Eventer]  ~Eventer");
+
+	if(m_events.empty() == false)
+	{
+		{
+		std::stringstream msg;
+		msg << "[Eventer] removing fd " << m_pipe[READ]<<" to reactor" <<std::endl;
+		ilrd::Log(msg.str());
+		}
+		m_reactor.RemFD(m_pipe[READ], Reactor::READ);
+	}
+
 	//close pipes resource
 	close(m_pipe[READ]);
 	close(m_pipe[WRITE]);
@@ -40,11 +52,22 @@ Eventer::~Eventer()
 Eventer::Handle Eventer::SetEvent(boost::function<void(void)> cb_)
 {
 	assert(cb_.empty() == true);
-
+	
 	//Lock before set new event
 	boost::unique_lock<boost::mutex> lock(m_eventsLock);
 
 	ilrd::Log("[Eventer] set event");
+
+	//register to reactor with the READ side of pipe 
+	if(m_events.empty() == true)
+	{
+		{
+		std::stringstream msg;
+		msg << "[Eventer] adding fd " << m_pipe[READ]<<" to reactor" <<std::endl;
+		ilrd::Log(msg.str());
+		}
+		m_reactor.AddFD(m_pipe[READ], Reactor::READ, boost::bind(&Eventer::OnEventFinishedCB, this, _1));
+	}
 	
 	//create a key 
 	Handle usrHandle = m_handleCounter++;
@@ -54,9 +77,6 @@ Eventer::Handle Eventer::SetEvent(boost::function<void(void)> cb_)
 		//Concurrently accessing other elements is safe.
 		//concurrently iterating ranges in the container is not safe.
 	m_events[usrHandle] = cb_;
-	
-	//register to reactor with the READ side of pipe 
-	m_reactor.AddFD(m_pipe[READ], Reactor::READ, boost::bind(&Eventer::OnEventFinishedCB, this, _1));
 	
 	{
 		std::stringstream msg;
@@ -113,10 +133,22 @@ void Eventer::OnEventFinishedCB(int readFd_) //callback function
 	//invoke the event callback
 	//Concurrently accessing other elements is safe.
 	//concurrently iterating ranges in the container is not safe.
+	assert(m_events.find(usrHandle) != m_events.end());
 	m_events[usrHandle]();
 
 	//Lock before remove
 	boost::unique_lock<boost::mutex> lock(m_eventsLock);
+
+	// remove from reactor in case of last event
+	if(m_events.size() == 1)
+	{
+		{
+		std::stringstream msg;
+		msg << "[Eventer] removing fd " << m_pipe[READ]<<" to reactor" <<std::endl;
+		ilrd::Log(msg.str());
+		}
+		m_reactor.RemFD(m_pipe[READ], Reactor::READ);
+	}
 
 	//remove the event element from the map
 	m_events.erase(usrHandle);
