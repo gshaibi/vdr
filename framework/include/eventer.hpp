@@ -13,7 +13,8 @@
 namespace ilrd
 {
 
-//TODO: comment on thread saftey guarantees
+
+// Thread-Safe Eventer
 
 class Eventer : private boost::noncopyable
 {
