@@ -39,6 +39,8 @@ Eventer::~Eventer()
 //methods//
 Eventer::Handle Eventer::SetEvent(boost::function<void(void)> cb_)
 {
+	assert(cb_.empty() == true);
+
 	//Lock before set new event
 	boost::unique_lock<boost::mutex> lock(m_eventsLock);
 
@@ -90,6 +92,8 @@ void Eventer::SignalEvent(Handle handle_) const
 //private methods//
 void Eventer::OnEventFinishedCB(int readFd_) //callback function
 {
+	assert(readFd_ == m_pipe[READ]);
+	
 	ilrd::Log("[Eventer] on event finished");
 	Handle usrHandle = 0;
 	
