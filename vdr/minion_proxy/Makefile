@@ -12,7 +12,7 @@ SHLIBS_LINK=$(patsubst %, -l%, $(SHLIBS))
 
 libminion_proxy.so: $(OBJS) 
 	$(CC) $(CPPFLAGS) $^ -o $@ $(SHLIBS_LINK)
-	$(RM) *.o *.gch
+
 
 test: $(SHLIBS_DIRS) libminion_proxy.so
 

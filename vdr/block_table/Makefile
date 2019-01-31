@@ -9,7 +9,7 @@ SHLIBS=-lpthread
 
 libblock_table.so: block_table.o
 	$(CC) $(CPPFLAGS) $(SHARED) $^ -o $@ 
-	$(RM) *.o *.gch
+
 
 a.out: $(OBJS)
 	$(CC) $(CPPFLAGS) $^ $(SHLIBS)

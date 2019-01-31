@@ -1,17 +1,20 @@
-TARGETS=
+CXX=g++
+CXXFLAGS=$(INCLUDES) -ansi -std=c++98 -pedantic-errors -Wall -Wextra -O0 -g3 -fPIC -shared 
+INCS=include ../include ../../include ../communication/include
+INCLUDES=$(patsubst %, -I%, $(INCS))
+TARGETS=eventer 
 OBJS=$(patsubst %, %.o, $(TARGETS))
-VPATH=$(patsubst %, ../../ds/%, $(TARGETS))
+SHLIBS=#-lboost_system -lboost_thread -lboost_chrono -lpthread
 
-#preprocessor flags used in CXXFLAGS
-IPATH=$(patsubst %, -I ../%, $(TARGETS)) -I../include
-
-#using default CXX (g++)
-CXXFLAGS+=-std=c++98 -ansi -pedantic-errors $(IPATH) -Wall -Wextra -g3 -O0
 FILENAME=$(shell basename $(CURDIR))
 
-a.out: $(FILENAME).o $(FILENAME)_test.o $(OBJS) $(FILENAME).hpp
-	$(CXX) $(CXXFLAGS) $^
-	rm *.o *.gch
+libeventer.so: $(OBJS)
+	$(CC) $(CXXFLAGS) $^ $(SHLIBS) -o $@
+	$(RM) *.o *.gch
+
+test: eventer.cpp eventer_test.cpp
+	$(CXX) -g3 $^  $(INCLUDES) $(SHLIBS)
+	$(RM) *.o *.gch
 
 .PHONY: clean remove
 clean:
