@@ -25,6 +25,7 @@ public:
 
   //methods//
 	typedef unsigned int Handle;
+	
 	Handle SetEvent(boost::function<void(void)> cb_);
 	void SignalEvent(Handle handle_);
 
