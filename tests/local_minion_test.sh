@@ -5,6 +5,8 @@ if [ "$#" -ne 1 ]; then
   exit 1
 fi
 
+cd ..
+
 echo "Testing vdr for nbd number $1"
 
 sudo modprobe nbd
