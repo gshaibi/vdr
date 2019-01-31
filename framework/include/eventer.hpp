@@ -25,7 +25,7 @@ public:
 
   //methods//
 	typedef unsigned int Handle;
-	
+
 	Handle SetEvent(boost::function<void(void)> cb_);
 	void SignalEvent(Handle handle_);
 
@@ -39,7 +39,7 @@ private:
 	std::map<Handle, CallBack> m_events;
 	int m_pipe[2];
 	Handle m_handleCounter;
-	mutable boost::mutex m_eventsLock;
+	boost::mutex m_eventsLock;
 
 };//class Eventer
 
