@@ -2,12 +2,14 @@
 #define TIMER_HPP
 
 #include <boost/noncopyable.hpp>
-#include <boost/chrono.hpp>
-#include <boost/function.hpp>
-#include <queue>
+#include <boost/chrono.hpp>						// its a timer 
+#include <boost/function.hpp>					// callbacks
 
-#include "sockpair.hpp"
-#include "reactor.hpp"
+#include <map>									// manage callbacks
+#include <sys/timerfd.h>						// linux timer object
+
+#include "logger.hpp"							// log events
+#include "reactor.hpp"							// time callbacks
 
 namespace ilrd
 {
@@ -19,37 +21,23 @@ public:
 	explicit Timer(Reactor& r_);
 	//generated dtor.
 
-	//returns handle to be used in Cancel.
 	typedef int Handle;
-	typedef const boost::chrono::steady_clock::time_point& duration_type;
+	typedef boost::chrono::steady_clock::time_point timePoint_type;
+	typedef boost::chrono::steady_clock::duration duraton_type;
 	typedef boost::function<void ()> CallBack_type;
 
-	Handle Set(boost::chrono::steady_clock::duration& duration_, CallBack_type callback_);
+	//returns handle to be used in Cancel.
+	Handle Set(duraton_type& duration_, CallBack_type callback_);
 	void Cancel(Handle handle_);
 
 private:
-	Reactor& m_r;
-	Sockpair m_sockets;
+	Handle m_handleCounter; 
+	Reactor& m_reactor;
+	int m_timerFd;
+	std::map<timePoint_type, std::pair<Handle, CallBack_type> > m_callBacks;
 
-	class TimedCallBack; // foreward declaration
-	std::priority_queue<TimedCallBack> m_pq;
-
-	void ThreadFunc(Sockpair fd038163408);
-
-	class TimedCallBack
-	{
-	public:
-		explicit TimedCallBack(duration_type duration_, CallBack_type callback_);
-		// generated dtor cctor and op=.
-
-		bool operator<(const TimedCallBack& o_) const;
-		void Do();
-		duration_type GetTime() const;
-
-	private:
-		duration_type m_dur;
-		CallBack_type m_cb;
-	};
+	void SetTimerIMP(duraton_type& duration_, CallBack_type callback_);
+	void CallBackWrapper(CallBack_type cb_);
 };
 
 } // ilrd
