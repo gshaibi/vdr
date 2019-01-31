@@ -12,8 +12,6 @@
 
 namespace ilrd
 {
-
-
 // Thread-Safe Eventer
 
 class Eventer : private boost::noncopyable
@@ -21,14 +19,15 @@ class Eventer : private boost::noncopyable
 public:
   //constructors & destructors//
   explicit Eventer(Reactor& reactor_); 
-	~Eventer();
+	~Eventer() noexcept;
 
 	// Blocked CCtor & op=
 
   //methods//
 	typedef unsigned int Handle;
+
 	Handle SetEvent(boost::function<void(void)> cb_);
-	void SignalEvent(Handle handle_) const;
+	void SignalEvent(Handle handle_);
 
 private:
 	enum PipeType{READ = 0, WRITE = 1};
@@ -40,7 +39,7 @@ private:
 	std::map<Handle, CallBack> m_events;
 	int m_pipe[2];
 	Handle m_handleCounter;
-	mutable boost::mutex m_eventsLock;
+	boost::mutex m_eventsLock;
 
 };//class Eventer
 

@@ -29,7 +29,7 @@ Eventer::Eventer(Reactor& reactor_):
 	}
 }
 
-Eventer::~Eventer()
+Eventer::~Eventer() noexcept
 {
 	ilrd::Log("[Eventer]  ~Eventer");
 
@@ -51,8 +51,6 @@ Eventer::~Eventer()
 //methods//
 Eventer::Handle Eventer::SetEvent(boost::function<void(void)> cb_)
 {
-	assert(cb_.empty() == true);
-	
 	//Lock before set new event
 	boost::unique_lock<boost::mutex> lock(m_eventsLock);
 
@@ -73,9 +71,6 @@ Eventer::Handle Eventer::SetEvent(boost::function<void(void)> cb_)
 	Handle usrHandle = m_handleCounter++;
 	
 	//insert to key to m_events along with the callback as value
-	
-		//Concurrently accessing other elements is safe.
-		//concurrently iterating ranges in the container is not safe.
 	m_events[usrHandle] = cb_;
 	
 	{
@@ -88,14 +83,14 @@ Eventer::Handle Eventer::SetEvent(boost::function<void(void)> cb_)
 	return usrHandle;
 }
 
-void Eventer::SignalEvent(Handle handle_) const
+void Eventer::SignalEvent(Handle handle_)
 {
-	//TODO:Lock before write
+	//Lock before write
 	boost::unique_lock<boost::mutex> lock(m_eventsLock);
 
 	ilrd::Log("[Eventer] Signal event");
-	//write the events key number (handle_) into side b of the pipe
 	
+	//write the events key number (handle_) into side b of the pipe
 	if(-1 == write(m_pipe[WRITE], &handle_, sizeof(Handle)))
 	{
 		ilrd::Log("[Eventer] write to pipe failed");
@@ -130,17 +125,19 @@ void Eventer::OnEventFinishedCB(int readFd_) //callback function
 		ilrd::Log(msg.str());
 	}
 
-	//invoke the event callback
-	//Concurrently accessing other elements is safe.
-	//concurrently iterating ranges in the container is not safe.
-	assert(m_events.find(usrHandle) != m_events.end());
-	m_events[usrHandle]();
-
-	//Lock before remove
+	//Lock before using m_events
 	boost::unique_lock<boost::mutex> lock(m_eventsLock);
 
+	assert(m_events.find(usrHandle) != m_events.end());
+	
+	//invoke the event callback
+	m_events[usrHandle]();
+
+	//remove the event element from the map
+	m_events.erase(usrHandle);
+
 	// remove from reactor in case of last event
-	if(m_events.size() == 1)
+	if(m_events.empty() == true)
 	{
 		{
 		std::stringstream msg;
@@ -150,9 +147,6 @@ void Eventer::OnEventFinishedCB(int readFd_) //callback function
 		m_reactor.RemFD(m_pipe[READ], Reactor::READ);
 	}
 
-	//remove the event element from the map
-	m_events.erase(usrHandle);
-	
 	{
 		std::stringstream msg;
 		msg << "[Eventer] event id " << usrHandle <<" removed"<< std::endl;
