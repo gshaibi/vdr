@@ -1,19 +1,16 @@
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
-#include <libconfig.h++> // Config
-#include <arpa/inet.h> // inet_pton
+#include <libconfig.h++>
 
-#include "app.hpp"
-
-using namespace ilrd;
 using namespace libconfig;
 
 int main()
 {
-	Config cfg;
+    Config cfg;
     try
     {
-        cfg.readFile("conf/master.conf");
+        cfg.readFile("master.conf");
     }
     catch (const FileIOException& fioex)
     {
@@ -30,25 +27,24 @@ int main()
     try
     {
         int numBlocks = cfg.lookup("numBlocks");
+		std::cout << numBlocks << std::endl;
+
 		std::string devicePath = cfg.lookup("devicePath");
+		std::cout << devicePath << std::endl;
 
-		std::vector<sockaddr_in> minionAddrs;
 		const Setting &minions = cfg.lookup("minions");
-		for (int i = 0; i < minions.getLength(); ++i)
-		{
-			sockaddr_in minionAddr;
-			minionAddr.sin_family = AF_INET;
-			minionAddr.sin_port = htonl(int(minions[i]["port"]));
 
-			std::string minionIp = minions[i]["ip"]; 
+		std::cout <<minions.getLength()  << std::endl;
 
-			inet_pton(AF_INET, (minions[i]["ip"]).c_str(), &(minionAddr.sin_addr));
-
-			minionAddrs.push_back(minionAddr);
-		}
+		int port = minions[0]["port"];
+		std::cout <<  port << std::endl;
 		
-		App a(devicePath, numBlocks, minionAddrs);
-		return 0;
+
+		std::string firstMinionIp = cfg.lookup("minions.[0].ip");
+		std::cout << firstMinionIp << std::endl;
+
+		int firstMinionPort = cfg.lookup("minions.[0].port");
+		std::cout << firstMinionPort << std::endl;
     }
     catch (const SettingNotFoundException& nfex)
     {
@@ -59,5 +55,9 @@ int main()
 		std::cout << "Setting '" <<  tex.getPath() << "' doesnt match it's type." << std::endl;
 	}
 
-	return EXIT_FAILURE;
+
+    // const Setting& root = cfg.getRoot();
+
+    // const Setting &minions = root["minions"];
+    // int count = minions.getLength();
 }

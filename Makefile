@@ -11,7 +11,7 @@ MINION_OBJS=$(patsubst %, %.o, $(MINION_TARGETS))
 SHLIBS_DIRS=vdr/app minion/minion_app minion/master_proxy minion/minion vdr/master framework/communication vdr/os_proxy vdr/protocols vdr/minion_proxy vdr/block_table 
 SHLIBS_PATHS_COLLON_SEP=$(subst $(space),:,$(SHLIBS_DIRS))
 SHLIBS_PATH=$(patsubst %, -L%, $(SHLIBS_DIRS))
-SHLIBS= app minion_app master_proxy minion master communication os_proxy protocols boost_thread boost_system boost_chrono minion_proxy block_table 
+SHLIBS= app minion_app master_proxy minion master communication os_proxy protocols boost_thread boost_system boost_chrono minion_proxy block_table config++
 SHLIBS_LINK=$(patsubst %, -l%, $(SHLIBS))
 
 
