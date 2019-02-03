@@ -3,6 +3,7 @@
 #include <iostream>
 #include <libconfig.h++> // Config
 
+#include "singleton.hpp"
 #include "minion_app.hpp"
 
 using namespace minion;
@@ -11,10 +12,10 @@ using namespace libconfig;
 
 int main(int argc, char* argv[])
 {
-    Config cfg;
+    Singleton<Config> cfg;
     try
     {
-        cfg.readFile("conf/minion.conf");
+        cfg.GetInstance().readFile("conf/minion.conf");
     }
     catch (const FileIOException& fioex)
     {
@@ -28,11 +29,11 @@ int main(int argc, char* argv[])
         return (EXIT_FAILURE);
     }
 
-    try
+    try 
     {
-        int numBlocks = cfg.lookup("numBlocks");
+        int numBlocks = cfg.GetInstance().lookup("numBlocks");
 
-		const Setting& master = cfg.lookup("master");
+		const Setting& master = cfg.GetInstance().lookup("master");
 
 		sockaddr_in masterAddr;
 		masterAddr.sin_family = AF_INET;

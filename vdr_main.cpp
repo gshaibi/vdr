@@ -3,6 +3,7 @@
 #include <libconfig.h++> // Config
 #include <arpa/inet.h> // inet_pton
 
+#include "singleton.hpp"
 #include "app.hpp"
 
 using namespace ilrd;
@@ -10,10 +11,10 @@ using namespace libconfig;
 
 int main()
 {
-	Config cfg;
+	Singleton<Config> cfg;
     try
     {
-        cfg.readFile("conf/master.conf");
+        cfg.GetInstance().readFile("conf/master.conf");
     }
     catch (const FileIOException& fioex)
     {
@@ -29,11 +30,11 @@ int main()
 
     try
     {
-        int numBlocks = cfg.lookup("numBlocks");
-		std::string devicePath = cfg.lookup("devicePath");
+        int numBlocks = cfg.GetInstance().lookup("numBlocks");
+		std::string devicePath = cfg.GetInstance().lookup("devicePath");
 
 		std::vector<sockaddr_in> minionAddrs;
-		const Setting &minions = cfg.lookup("minions");
+		const Setting &minions = cfg.GetInstance().lookup("minions");
 		for (int i = 0; i < minions.getLength(); ++i)
 		{
 			sockaddr_in minionAddr;
