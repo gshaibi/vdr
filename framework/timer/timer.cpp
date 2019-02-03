@@ -29,6 +29,7 @@ Timer::Handle Timer::Set(Duration& duration_,
     TimePoint real_time = boost::chrono::steady_clock::now() + duration_;
     m_callBacks[real_time] = std::make_pair(m_handleCounter, callback_);
 
+    // if our map was empty until now - we must set the tier and Add() to the reactor
     if (1 == m_callBacks.size())
     {
         m_reactor.AddFD(*m_timerFd, Reactor::READ, 
@@ -36,8 +37,8 @@ Timer::Handle Timer::Set(Duration& duration_,
         SetTimerIMP(duration_);
     }
     else
-    {
-       if (real_time == m_callBacks.begin()->first) // new timer is sooner than current
+    {  // if the new timer request is sooner than current timer - override current
+       if (real_time == m_callBacks.begin()->first) 
         {
             ilrd::Log("Timer::Set() shorter time was set");
             SetTimerIMP(duration_);
@@ -51,8 +52,8 @@ void Timer::SetTimerIMP(Duration duration_)
 {
     ilrd::Log("Timer::SetTimerIMP()");
 
-    struct timespec nsec = {duration_.count() / NANOS_IN_SECOND, 
-                            duration_.count() % NANOS_IN_SECOND};      // {sec, nsec}
+    struct timespec nsec = {duration_.count() / NANOS_IN_SECOND, // seconds
+                            duration_.count() % NANOS_IN_SECOND};// nanoseconds
     struct itimerspec new_timeout = { {0, 0}, nsec};    // {interval, time_value}
 
     if (-1 == timerfd_settime(*m_timerFd, 0, &new_timeout, NULL))
@@ -70,10 +71,13 @@ void Timer::Cancel(Handle handle_)
     
     std::map<TimePoint, std::pair<Handle, CallBack> >::iterator curr = m_callBacks.begin();
     
-    if (handle_ == curr->second.first) // if it is the handle of the current timer
+    // if it is the handle of the current timer
+    if (handle_ == curr->second.first) 
     {
         m_callBacks.erase(curr++);
-        if (curr == m_callBacks.end())
+
+        // if empty - cancel timer and remove fd frome reactor
+        if (m_callBacks.empty())
         {
             ilrd::Log("cancel last");
             SetTimerIMP(boost::chrono::nanoseconds(0));
@@ -81,11 +85,14 @@ void Timer::Cancel(Handle handle_)
             return;
         }
 
+        // set new timer with the duration of the current map.begin()
         Duration new_dur = curr->first - boost::chrono::steady_clock::now();
         SetTimerIMP(new_dur);
         return;
     }
     
+    // if it was not the handle to the current timer - 
+    // just iterate and remove the handle from the map
     while (++curr != m_callBacks.end())
     {
         if (handle_ == curr->second.first)
@@ -104,6 +111,7 @@ void Timer::CallBackWrapper()
     curr->second.second(); // callback()
     m_callBacks.erase(curr++);
 
+    // if empty - cancel timer and remove fd frome reactor
     if (m_callBacks.empty())
     {
         SetTimerIMP(boost::chrono::nanoseconds(0));
@@ -112,6 +120,8 @@ void Timer::CallBackWrapper()
     else
     {
         Duration next_dur = curr->first - boost::chrono::steady_clock::now();
+
+        // if we are already late to run the next callback - set timer to 1 nanosec
         if (0 > next_dur.count())
         {
             SetTimerIMP(boost::chrono::nanoseconds(1));
