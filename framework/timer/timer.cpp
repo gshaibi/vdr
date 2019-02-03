@@ -71,8 +71,19 @@ void Timer::Cancel(Handle handle_)
     
     std::map<TimePoint, std::pair<Handle, CallBack> >::iterator curr = m_callBacks.begin();
     
+    // iterate to find the handle
+    while (curr != m_callBacks.end())
+    {
+        if (handle_ == curr->second.first)
+        {
+            break;
+        }
+        ++curr;
+    }
+    assert(curr != m_callBacks.end()); // no such handle
+
     // if it is the handle of the current timer
-    if (handle_ == curr->second.first) 
+    if (curr == m_callBacks.begin()) 
     {
         m_callBacks.erase(curr++);
 
@@ -87,20 +98,20 @@ void Timer::Cancel(Handle handle_)
 
         // set new timer with the duration of the current map.begin()
         Duration new_dur = curr->first - boost::chrono::steady_clock::now();
-        SetTimerIMP(new_dur);
+        // if we are already late to run the next callback - set timer to 1 nanosec
+        if (0 > new_dur.count())
+        {
+            SetTimerIMP(boost::chrono::nanoseconds(1));
+        }
+        else
+        {
+            SetTimerIMP(new_dur);
+        }
         return;
     }
     
-    // if it was not the handle to the current timer - 
-    // just iterate and remove the handle from the map
-    while (++curr != m_callBacks.end())
-    {
-        if (handle_ == curr->second.first)
-        {
-            m_callBacks.erase(curr);
-            break;
-        }
-    }
+    // if it was not the handle to the current timer - simply remove 
+    m_callBacks.erase(curr);
 }
 
 void Timer::CallBackWrapper()

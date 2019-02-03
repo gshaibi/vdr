@@ -44,10 +44,12 @@ TestResult Overall()
   int h5 = t.Set(time2, PrintB);
   int h6 = t.Set(time3, PrintC);
 
-
-  t.Cancel(h3);
-  // t.Cancel(h6);
-  t.Cancel(h4);
+  t.Cancel(h1);
+  // t.Cancel(h2);
+  // t.Cancel(h3);
+  // t.Cancel(h4);
+  t.Cancel(h5);
+  t.Cancel(h6);
 
   r.Start();
 
