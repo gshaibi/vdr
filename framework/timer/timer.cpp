@@ -69,7 +69,7 @@ void Timer::Cancel(Handle handle_)
     ilrd::Log("Timer::Cancel()");
     assert(!m_callBacks.empty());
     
-    std::map<TimePoint, std::pair<Handle, CallBack> >::iterator curr = m_callBacks.begin();
+    TimerIter curr = m_callBacks.begin();
     
     // iterate to find the handle
     while (curr != m_callBacks.end())
@@ -91,7 +91,7 @@ void Timer::Cancel(Handle handle_)
         if (m_callBacks.empty())
         {
             ilrd::Log("cancel last");
-            SetTimerIMP(boost::chrono::nanoseconds(0));
+            SetTimerIMP(Duration(0));
             m_reactor.RemFD(*m_timerFd, Reactor::READ);
             return;
         }
@@ -101,7 +101,7 @@ void Timer::Cancel(Handle handle_)
         // if we are already late to run the next callback - set timer to 1 nanosec
         if (0 > new_dur.count())
         {
-            SetTimerIMP(boost::chrono::nanoseconds(1));
+            SetTimerIMP(Duration(1));
         }
         else
         {
@@ -117,7 +117,7 @@ void Timer::Cancel(Handle handle_)
 void Timer::CallBackWrapper()
 {
     ilrd::Log("Timer::CallBackWrapper()");
-    std::map<TimePoint, std::pair<Handle, CallBack> >::iterator curr = m_callBacks.begin();
+    TimerIter curr = m_callBacks.begin();
 
     curr->second.second(); // callback()
     m_callBacks.erase(curr++);
@@ -125,7 +125,7 @@ void Timer::CallBackWrapper()
     // if empty - cancel timer and remove fd frome reactor
     if (m_callBacks.empty())
     {
-        SetTimerIMP(boost::chrono::nanoseconds(0));
+        SetTimerIMP(Duration(0));
         m_reactor.RemFD(*m_timerFd, Reactor::READ);
     }
     else
@@ -135,7 +135,7 @@ void Timer::CallBackWrapper()
         // if we are already late to run the next callback - set timer to 1 nanosec
         if (0 > next_dur.count())
         {
-            SetTimerIMP(boost::chrono::nanoseconds(1));
+            SetTimerIMP(Duration(1));
         }
         else
         {

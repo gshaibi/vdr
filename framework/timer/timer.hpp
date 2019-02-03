@@ -31,6 +31,7 @@ public:
 	void Cancel(Handle handle_);
 
 private:
+	typedef std::map<TimePoint, std::pair<Handle, CallBack> >::iterator TimerIter;
 	static const int NANOS_IN_SECOND = 1000000000;
 
 	Handle m_handleCounter; 
@@ -43,7 +44,8 @@ private:
 	void SetTimerIMP(Duration duration_);
 	void CallBackWrapper();
 	static void CloseFD(int* fd_);
-};
+
+}; // timer
 
 } // ilrd
 
