@@ -92,14 +92,8 @@ void MasterProxy::ConstructReplyImp(ilrd::protocols::minionUDP::reply* rep_,
 
 void MasterProxy::SendReplyImp(const ilrd::protocols::minionUDP::reply& rep_)
 {
-	std::stringstream ss;
-	char str[INET_ADDRSTRLEN];
-
-	ss << "MasterProxy: Replying to vdr. " << std::endl 
-	<< "Vdr address: port - " << m_vdrAddr.sin_port << '\t' 
-	<< "address" << inet_ntop(AF_INET, &(m_vdrAddr.sin_addr), str, INET_ADDRSTRLEN);
+	ilrd::Log("MasterProxy: Sending reply to master");
 	
-	ilrd::Log(ss.str());
 	if (sizeof (rep_) != sendto(m_udpSock, &rep_, sizeof(rep_), MSG_DONTWAIT, (sockaddr *)&m_vdrAddr, sizeof(m_vdrAddr)))
 	{
 		ilrd::Log("Error sending reply to master");
