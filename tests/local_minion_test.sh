@@ -24,7 +24,7 @@ sleep 1
 
 sudo ./vdr.out&
 
-sleep 3
+sleep 2
 if ! sudo mkfs.ext4 $devicePath
 then 
 	echo "Failed creating filesystem"
@@ -46,4 +46,4 @@ echo
 echo
 cat tmp_result
 rm tmp_result
-pkill minion.out
+sudo pkill minion.out

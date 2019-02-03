@@ -36,11 +36,9 @@ int main(int argc, char* argv[])
 
 		sockaddr_in masterAddr;
 		masterAddr.sin_family = AF_INET;
-		masterAddr.sin_port = htonl(int(master["port"]));
-		std::cout << int(master["port"]) << std::endl;
+		masterAddr.sin_port = htons(int(master["port"]));
 
 		std::string masterIp = master["ip"];
-		std::cout << masterIp << std::endl;
 
 		inet_pton(AF_INET, (masterIp).c_str(), &(masterAddr.sin_addr));
 

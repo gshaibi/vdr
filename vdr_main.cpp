@@ -38,7 +38,7 @@ int main()
 		{
 			sockaddr_in minionAddr;
 			minionAddr.sin_family = AF_INET;
-			minionAddr.sin_port = htonl(int(minions[i]["port"]));
+			minionAddr.sin_port = htons(int(minions[i]["port"]));
 
 			std::string minionIp = minions[i]["ip"]; 
 
