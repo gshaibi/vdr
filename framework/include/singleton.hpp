@@ -58,8 +58,8 @@ T& Singleton<T>::GetInstance()
 				boost::this_thread::yield();
 			}
 		}
-		return *m_instance;
 	}
+	return *s_instance;
 }
 
 }//namesp ilrd
