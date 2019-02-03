@@ -17,6 +17,7 @@ Timer::Timer(Reactor& r_) : m_handleCounter(0),
     if (-1 == *m_timerFd)
     {
         std::cout << "timer_create() failed\n";
+        //TODO: throw runtime_error(std::perror)
     }
 }
 
@@ -48,7 +49,7 @@ Timer::Handle Timer::Set(Duration& duration_,
     return (m_handleCounter++);
 }
 
-void Timer::SetTimerIMP(Duration duration_)
+void Timer::SetTimerIMP(Duration duration_) const
 {
     ilrd::Log("Timer::SetTimerIMP()");
 
@@ -80,14 +81,14 @@ void Timer::Cancel(Handle handle_)
         }
         ++curr;
     }
-    assert(curr != m_callBacks.end()); // no such handle
+    assert(curr != m_callBacks.end());
 
     // if it is the handle of the current timer
     if (curr == m_callBacks.begin()) 
     {
         m_callBacks.erase(curr++);
 
-        // if empty - cancel timer and remove fd frome reactor
+        // if empty - cancel timer and remove fd from reactor
         if (m_callBacks.empty())
         {
             ilrd::Log("cancel last");
@@ -96,21 +97,12 @@ void Timer::Cancel(Handle handle_)
             return;
         }
 
-        // set new timer with the duration of the current map.begin()
-        Duration new_dur = curr->first - boost::chrono::steady_clock::now();
-        // if we are already late to run the next callback - set timer to 1 nanosec
-        if (0 > new_dur.count())
-        {
-            SetTimerIMP(Duration(1));
-        }
-        else
-        {
-            SetTimerIMP(new_dur);
-        }
+        // set new timer with the duration of map.begin()
+        SetNextTimer(curr);
         return;
     }
     
-    // if it was not the handle to the current timer - simply remove 
+    // if it was not the handle to the current timer - simply remove it
     m_callBacks.erase(curr);
 }
 
@@ -130,19 +122,16 @@ void Timer::CallBackWrapper()
     }
     else
     {
-        Duration next_dur = curr->first - boost::chrono::steady_clock::now();
-
-        // if we are already late to run the next callback - set timer to 1 nanosec
-        if (0 > next_dur.count())
-        {
-            SetTimerIMP(Duration(1));
-        }
-        else
-        {
-            SetTimerIMP(next_dur);
-        }
-        
+        SetNextTimer(curr);
     }
+}
+
+void Timer::SetNextTimer(TimerIter iter_) const
+{
+    Duration next_dur = iter_->first - boost::chrono::steady_clock::now();
+
+    // if we are already late to run the next callback - set timer to 1 nanosec
+    SetTimerIMP((0 > next_dur.count()) ? Duration(1) : next_dur);
 }
 
 void Timer::CloseFD(int* fd_)

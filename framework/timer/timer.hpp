@@ -41,8 +41,9 @@ private:
 	typedef boost::shared_ptr<int> sharedFD;
 	boost::shared_ptr<int> m_timerFd;
 
-	void SetTimerIMP(Duration duration_);
+	void SetTimerIMP(Duration duration_) const;
 	void CallBackWrapper();
+	void SetNextTimer(TimerIter iter_) const;
 	static void CloseFD(int* fd_);
 
 }; // timer
