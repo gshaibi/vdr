@@ -7,8 +7,8 @@
 #include <boost/function.hpp> //using function
 #include <boost/shared_ptr.hpp> // using shared_ptr
 
-#include "eventer.hpp" //using eventer
 #include "thread_pool.hpp" //using thread pool
+#include "eventer.hpp" //using eventer
 
 namespace ilrd
 {

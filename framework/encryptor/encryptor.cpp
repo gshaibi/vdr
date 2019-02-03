@@ -31,9 +31,8 @@ void Encryptor::SendTaskToThreadPoolIMP(CallBack cb_, Buffer buff_)
 	//set event
 	Eventer::Handle handle = m_eventer.SetEvent(cb_); //thread safe function
 	
-	//add task to thread pool
-	m_threadPool.Add(boost::bind(&Encryptor::EncryptDecryptIMP, this, handle, buff_), 
-														ThreadPool::Priority::LOW); //thread safe function
+	//add task to thread pool (using default priority : MEDIUM)
+	m_threadPool.Add(boost::bind(&Encryptor::EncryptDecryptIMP, this, handle, buff_)); //thread safe function
 }
 
 void Encryptor::EncryptDecryptIMP(Eventer::Handle handle_, Buffer buff_)
