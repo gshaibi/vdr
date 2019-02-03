@@ -31,6 +31,8 @@ public:
 	void Cancel(Handle handle_);
 
 private:
+	static const int NANOS_IN_SECOND = 1000000000;
+
 	Handle m_handleCounter; 
 	Reactor& m_reactor;
 	std::map<TimePoint, std::pair<Handle, CallBack> > m_callBacks;
@@ -38,8 +40,7 @@ private:
 	typedef boost::shared_ptr<int> sharedFD;
 	boost::shared_ptr<int> m_timerFd;
 
-	void SetTimerIMP(Duration& duration_);
-	void CancelTimerIMP();
+	void SetTimerIMP(Duration duration_);
 	void CallBackWrapper();
 	static void CloseFD(int* fd_);
 };
