@@ -2,7 +2,7 @@
 #include <cassert>
 #include <boost/bind.hpp>   // to wrap the callback
 #include <sys/timerfd.h>    // timerfd
-
+#include <stdio.h>
 #include "routines.hpp"
 #include "timer.hpp"
 
@@ -17,6 +17,7 @@ Timer::Timer(Reactor& r_) : m_handleCounter(0),
     if (-1 == *m_timerFd)
     {
         std::cout << "timer_create() failed\n";
+        //TODO: throw runtime_error(std::perror)
     }
 }
 
@@ -29,6 +30,7 @@ Timer::Handle Timer::Set(Duration& duration_,
     TimePoint real_time = boost::chrono::steady_clock::now() + duration_;
     m_callBacks[real_time] = std::make_pair(m_handleCounter, callback_);
 
+    // if our map was empty until now - we must set the tier and Add() to the reactor
     if (1 == m_callBacks.size())
     {
         m_reactor.AddFD(*m_timerFd, Reactor::READ, 
@@ -36,8 +38,8 @@ Timer::Handle Timer::Set(Duration& duration_,
         SetTimerIMP(duration_);
     }
     else
-    {
-       if (real_time == m_callBacks.begin()->first) // new timer is sooner than current
+    {  // if the new timer request is sooner than current timer - override current
+       if (real_time == m_callBacks.begin()->first) 
         {
             ilrd::Log("Timer::Set() shorter time was set");
             SetTimerIMP(duration_);
@@ -47,27 +49,18 @@ Timer::Handle Timer::Set(Duration& duration_,
     return (m_handleCounter++);
 }
 
-void Timer::SetTimerIMP(Duration& duration_)
+void Timer::SetTimerIMP(Duration duration_) const
 {
     ilrd::Log("Timer::SetTimerIMP()");
-    std::cout << duration_ << " " << duration_.count() << std::endl;
 
-    struct timespec nsec = {0, duration_.count()};      // {sec, nsec}
+    struct timespec nsec = {duration_.count() / NANOS_IN_SECOND, // seconds
+                            duration_.count() % NANOS_IN_SECOND};// nanoseconds
     struct itimerspec new_timeout = { {0, 0}, nsec};    // {interval, time_value}
 
     if (-1 == timerfd_settime(*m_timerFd, 0, &new_timeout, NULL))
     {
-        ilrd::Log("Timer::SetTimerIMP timerfd_settime() failed-------------------------XX");
-        //TODO: throw runtime_error(std::perror)
-    }
-}
-
-void Timer::CancelTimerIMP()
-{
-    struct itimerspec new_timeout = { {0, 0}, {0, 0}};
-    if (-1 == timerfd_settime(*m_timerFd, 0, &new_timeout, NULL))
-    {
-        ilrd::Log("Timer::SetTimerIMP timerfd_settime() failed---------XX");
+        ilrd::Log("Timer::SetTimerIMP timerfd_settime() failed");
+        perror("Timer::SetTimerIMP");
         //TODO: throw runtime_error(std::perror)
     }
 }
@@ -77,59 +70,75 @@ void Timer::Cancel(Handle handle_)
     ilrd::Log("Timer::Cancel()");
     assert(!m_callBacks.empty());
     
-    std::map<TimePoint, std::pair<Handle, CallBack> >::iterator curr = m_callBacks.begin();
+    TimerIter curr = m_callBacks.begin();
     
-    if (handle_ == curr->second.first) // if it is the handle of the current timer
+    // iterate to find the handle
+    while (curr != m_callBacks.end())
+    {
+        if (handle_ == curr->second.first)
+        {
+            break;
+        }
+        ++curr;
+    }
+    assert(curr != m_callBacks.end());
+
+    // if it is the handle of the current timer
+    if (curr == m_callBacks.begin()) 
     {
         m_callBacks.erase(curr++);
-        if (curr == m_callBacks.end())
+
+        // if empty - cancel timer and remove fd from reactor
+        if (m_callBacks.empty())
         {
             ilrd::Log("cancel last");
-            CancelTimerIMP();
+            SetTimerIMP(Duration(0));
             m_reactor.RemFD(*m_timerFd, Reactor::READ);
             return;
         }
 
-        Duration new_dur = curr->first - boost::chrono::steady_clock::now();
-        SetTimerIMP(new_dur);
+        // set new timer with the duration of map.begin()
+        SetNextTimer(curr);
         return;
     }
     
-    while (++curr != m_callBacks.end())
-    {
-        if (handle_ == curr->second.first)
-        {
-            m_callBacks.erase(curr);
-            break;
-        }
-    }
+    // if it was not the handle to the current timer - simply remove it
+    m_callBacks.erase(curr);
 }
 
 void Timer::CallBackWrapper()
 {
     ilrd::Log("Timer::CallBackWrapper()");
+    TimerIter curr = m_callBacks.begin();
 
-    m_callBacks.begin()->second.second(); // callback()
-
-    std::map<TimePoint, std::pair<Handle, CallBack> >::iterator curr = m_callBacks.begin();
+    curr->second.second(); // callback()
     m_callBacks.erase(curr++);
 
+    // if empty - cancel timer and remove fd frome reactor
     if (m_callBacks.empty())
     {
-        CancelTimerIMP();
+        SetTimerIMP(Duration(0));
         m_reactor.RemFD(*m_timerFd, Reactor::READ);
     }
     else
     {
-        Duration next_dur = curr->first - boost::chrono::steady_clock::now();
-        SetTimerIMP(next_dur);
+        SetNextTimer(curr);
     }
+}
+
+void Timer::SetNextTimer(TimerIter iter_) const
+{
+    Duration next_dur = iter_->first - boost::chrono::steady_clock::now();
+
+    // if we are already late to run the next callback - set timer to 1 nanosec
+    SetTimerIMP((0 > next_dur.count()) ? Duration(1) : next_dur);
 }
 
 void Timer::CloseFD(int* fd_)
 {
     close(*fd_);
     delete fd_;
+    fd_ = NULL;
 }
 
 } // ilrd
