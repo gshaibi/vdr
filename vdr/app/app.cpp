@@ -11,7 +11,7 @@
 namespace ilrd
 {
 
-App::App(const std::string& devicePath_, size_t numBlocks_)
+App::App(const std::string& devicePath_, size_t numBlocks_, const std::vector<sockaddr_in> minionAddrs)
 {
 	Log("Constructing Reactor");
 	Reactor r;
