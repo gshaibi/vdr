@@ -2,7 +2,7 @@ CXX=g++
 CXXFLAGS=$(INCLUDES) -ansi -std=c++98 -pedantic-errors -Wall -Wextra -O0 -g3 -fPIC 
 space :=
 space +=
-INCS=include/ vdr/app/ vdr/include/ framework/communication/include/  minion/minion_app minion/include
+INCS=include/ vdr/app/ vdr/include/ framework/communication/include/  minion/minion_app minion/include 
 INCLUDES=$(patsubst %, -I%, $(INCS))
 VDR_TARGETS=vdr_main
 MINION_TARGETS=minion_main
