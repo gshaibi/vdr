@@ -26,8 +26,10 @@ public:
 	typedef boost::chrono::steady_clock::duration Duration;
 	typedef boost::function<void ()> CallBack;
 
-	//returns handle to be used in Cancel.
+	//returns handle to be used in Cancel().
+	// callback should have short execution time in relation to duration
 	Handle Set(Duration& duration_, CallBack callback_);
+
 	void Cancel(Handle handle_);
 
 private:
@@ -45,7 +47,7 @@ private:
 	void CallBackWrapper();
 	void SetNextTimer(TimerIter iter_) const;
 	static void CloseFD(int* fd_);
-
+	void EraseAndSetTimerIMP(TimerIter iter_);
 }; // timer
 
 } // ilrd
