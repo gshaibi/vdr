@@ -24,7 +24,7 @@ Timer::Timer(Reactor& r_) : m_handleCounter(0),
 Timer::Handle Timer::Set(Duration& duration_, 
                         CallBack callback_)
 {
-    ilrd::Log("Timer::Set()");
+    ilrd::Log("[Timer] Timer::Set()");
     assert(!callback_.empty());
     
     TimePoint real_time = boost::chrono::steady_clock::now() + duration_;
@@ -41,7 +41,7 @@ Timer::Handle Timer::Set(Duration& duration_,
     {  // if the new timer request is sooner than current timer, set new timer
        if (real_time == m_callBacks.begin()->first) 
         {
-            ilrd::Log("Timer::Set() shorter time was set");
+            ilrd::Log("[Timer] Timer::Set() shorter time was set");
             SetTimerIMP(duration_);
         }
     } 
@@ -59,14 +59,14 @@ void Timer::SetTimerIMP(Duration duration_) const
 
     if (-1 == timerfd_settime(*m_timerFd, 0, &new_timeout, NULL))
     {
-        ilrd::Log("Timer::SetTimerIMP timerfd_settime() failed");
+        ilrd::Log("[Timer] Timer::SetTimerIMP timerfd_settime() failed");
         //TODO: throw runtime_error(std::perror)
     }
 }
 
 void Timer::Cancel(Handle handle_)
 {    
-    ilrd::Log("Timer::Cancel()");
+    ilrd::Log("[Timer] Timer::Cancel()");
     assert(!m_callBacks.empty());
     
     TimerIter curr = m_callBacks.begin();
@@ -95,7 +95,7 @@ void Timer::Cancel(Handle handle_)
 
 void Timer::CallBackWrapper()
 {
-    ilrd::Log("Timer::CallBackWrapper()");
+    ilrd::Log("[Timer] Timer::CallBackWrapper()");
     TimerIter curr = m_callBacks.begin();
 
     curr->second.second(); // callback()
