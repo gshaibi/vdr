@@ -7,112 +7,404 @@
 namespace ilrd
 {
 
-using namespace std; 			 //STL
+using namespace std; 			 //STL libraries
+using namespace boost;  	 //boost libraries
 using namespace protocols; //os/minion reply/request protocols
 
 /***********************************Master*************************************/
+//static data definition//
+boost::chrono::steady_clock::duration Master::TIMEOUT(TIMEOUT_IN_NANOSECONDS); 
+
 //ctor//
 Master::Master(size_t nMinions_, Reactor& r_, const sockaddr_in& minionAddr_)
 : m_osPtr(NULL),
 	m_minionProxy(0, *this, r_, minionAddr_),
-	m_blockTable(BLOCK_SIZE) 
+	m_blockTable(BLOCK_SIZE),
+	m_timer(r_),
+	m_readRequests(),
+	m_writeRequests()
 {
 	// write to log
 	stringstream str;
-	str << "[Master] ctor: numMinions=" << nMinions_ << " blockSize=" << BLOCK_SIZE;
+	str << "[Master] ctor: numMinions = " << nMinions_ << " blockSize = " << BLOCK_SIZE;
 	Log(str.str());
 }
 
-//public methods//
+/*******************************public methods*********************************/
 void Master::SetOsProxy(OsProxy *os_)
 {
+	Log("[Master] SetOsProxy");
+
 	assert(NULL == m_osPtr); //prevent double set
 	assert(os_ != NULL); 
 
-	Log("[Master] SetOsProxy");
 	m_osPtr = os_;
 }
 
-void Master::Read(protocols::os::ReadRequest request_)
+void Master::Read(protocols::os::ReadRequest req_)
 {
-	assert(m_osPtr != NULL);
-
 	Log("[Master] Read");
 
-	// Translate the request with BlockTable
-	std::vector<BlockTable::BlockLocation> 
-		requests(m_blockTable.Translate(request_.GetOffset()));
-	
+	assert(m_osPtr != NULL);
+	// assert that request isn't already in map
+	assert(m_readRequests.end() == m_readRequests.find(req_.GetID()));
+	assert(m_writeRequests.end() == m_writeRequests.find(req_.GetID()));
+
+	// Process request - Translate, set Timer 
+	RequestData data = ProcessRequestIMP(req_.GetOffset(), req_.GetID());
+
+	// Insert request to map
+	// m_sentRequests[id_] = make_pair(requests, make_pair(handle, NBD_AWAITING_REPLY));
+	MappedReadRequest to_insert = {data, req_};
+	m_readRequests.insert(make_pair(req_.GetID(), to_insert));
+
 	// pass the requests to minion proxys
-	for (size_t i = 0; i < requests.size(); ++i)
+	SendReadRequestsIMP(data.blockLocations, req_);
+}
+
+
+// TODO: need to unite all the duplicate code between Read & Write
+void Master::Write(protocols::os::WriteRequest req_)
+{
+	Log("[Master] Write");
+
+	assert(m_osPtr != NULL);
+	// assert that request isn't already in map
+	assert(m_readRequests.end() == m_readRequests.find(req_.GetID()));
+	assert(m_writeRequests.end() == m_writeRequests.find(req_.GetID()));
+
+	// Process request - Translate, set Timer 
+	RequestData data = ProcessRequestIMP(req_.GetOffset(), req_.GetID());
+
+	// Insert request to map
+	MappedWriteRequest to_insert = {data, req_};
+	m_writeRequests.insert(make_pair(req_.GetID(), to_insert));
+
+	// pass the requests to minion proxys
+	SendWriteRequestsIMP(data.blockLocations, req_);
+}
+
+/*******************************private methods********************************/
+void Master::ReplyReadIMP(protocols::minion::ReadReply rep_)
+{ 
+	// write to log
+	stringstream str;
+	str << "[Master] ReplyReadIMP | status = " << rep_.GetStatus() << \
+	" | minionID = " << rep_.GetMinionID();
+	Log(str.str());
+
+	assert(m_osPtr != NULL);
+
+	// process reply
+	Log("[Master] calling ProcessReplyIMP");
+
+	// RequestStatus status = ProcessReplyIMP(rep_.GetID(), rep_.GetMinionID());
+	RequestStatus status = ProcessReadReplyIMP(rep_.GetID(), rep_.GetMinionID());
+	
+	// write to log
+	str.str(""); 
+	str << "[Master] RequestStatus = " << status; 
+	Log(str.str());
+
+	//reply to nbd if haven't replied yet
+	if (NBD_AWAITING_REPLY == status)
 	{
-		BlockTable::BlockLocation curr = requests[i];
-		minion::ReadRequest minionRequest(request_, curr.blockOffset);
+		os::ReadReply ospReply(rep_.GetID(), rep_.GetStatus(), rep_.GetData());
 
 		// write to log
 		stringstream str;
-		str << "[Master] calling MinionProxy::ReadRequest | minionID=" << \
-		curr.minionID << " block=" << curr.blockOffset;
-	 	Log(str.str()); 
-		
-		m_minionProxy.ReadReq(minionRequest);
+		str << "[Master] calling OsProxy::ReplyRead | status = " << rep_.GetStatus() \
+		<< " buffer = " << rep_.GetData();
+		Log(str.str());
+
+		m_osPtr->ReplyRead(ospReply);
 	}
 }
 
-void Master::Write(protocols::os::WriteRequest request_)
-{
+void Master::ReplyWriteIMP(protocols::minion::WriteReply rep_) 
+{ 
+	// write to log
+	stringstream str;
+	str << "[Master] ReplyWriteIMP | status = " << rep_.GetStatus() << \
+	" | minionID = " << rep_.GetMinionID();
+	Log(str.str());
+
 	assert(m_osPtr != NULL);
 
-	Log("[Master] WriteReq");
+	// process reply
+	Log("[Master] calling ProcessReplyIMP");
+	
+	// RequestStatus status = ProcessReplyIMP(rep_.GetID(), rep_.GetMinionID());
+	RequestStatus status = ProcessWriteReplyIMP(rep_.GetID(), rep_.GetMinionID());
 
-	// Translate the request with BlockTable
-	std::vector<BlockTable::BlockLocation> 
-		requests(m_blockTable.Translate(request_.GetOffset()));
+	// write to log
+	str.str("");
+	str << "[Master] RequestStatus = " << status;
+	Log(str.str());
 
-	// pass the requests to minion proxys
-	for (size_t i = 0; i < requests.size(); ++i)
+	//reply to nbd if haven't replied yet
+	if (NBD_AWAITING_REPLY == status)
 	{
-		BlockTable::BlockLocation curr = requests[i];
-		minion::WriteRequest minionRequest(request_, curr.blockOffset);
+		os::WriteReply ospReply(rep_.GetID(), rep_.GetStatus()); 
 
 		// write to log
 		stringstream str;
-		str << "[Master] calling MinionProxy::WriteRequest | minionID=" << \
-		curr.minionID << " block=" << curr.blockOffset;
-	 	Log(str.str()); 
+		str << "[Master] calling OsProxy::ReplyWrite | status = " << rep_.GetStatus();
+		Log(str.str());
+
+		m_osPtr->ReplyWrite(ospReply);
+	}
+}
+
+// TODO: don't need this func?
+//used in Master::Read & Master::Write
+// Master::RequestStatus Master::ProcessReplyIMP(protocols::ID id_, size_t minionID_) 
+
+Master::RequestStatus Master::ProcessReadReplyIMP(protocols::ID id_, size_t minionID_) 
+{
+	// write to log
+	stringstream str;
+	str << "[Master] ProcessReadReplyIMP | minionID = " << minionID_;
+	Log(str.str());
+
+	// if request id isn't in map - ignore the reply
+	ReadIterator found(m_readRequests.find(id_));
 	
+	if (m_readRequests.end() == found)
+	{
+		Log("[Master] request ID is not in map - ignoring the reply");
+		return REPLIED_TO_NBD;
+	}
+
+	MappedReadRequest request = (*found).second;
+	BlockLocations bl = request.data.blockLocations;
+
+	// find minionID_ in vector
+	for (Iterator iter(bl.begin()); iter != bl.end(); ++iter)
+	{
+		// if found minion - remove it 
+		if (minionID_ == (*iter).minionID)
+		{
+			Log("[Master] removing minion's BlockLocation from mapped vector");
+
+			// erase minion from the vector
+			bl.erase(iter);
+
+			// if vector is empty - remove ID from map & cancel timer
+			if (bl.empty())
+			{
+				Log("[Master] vector empty - removing ID from map & canceling timer");
+				m_readRequests.erase(id_);
+				m_timer.Cancel(request.data.handle);
+			}
+
+			break;
+		}
+	}
+
+	// get RequestStatus
+	RequestStatus status = request.data.status;
+
+	// write to log
+	str.str("");
+	str << "[Master] RequestStatus = " << status;
+	Log(str.str());
+
+	// update RequestStatus
+	request.data.status = REPLIED_TO_NBD;
+
+	return status; 
+}
+
+Master::RequestStatus Master::ProcessWriteReplyIMP(protocols::ID id_, size_t minionID_) 
+{
+	// write to log
+	stringstream str;
+	str << "[Master] ProcessWriteReplyIMP | minionID = " << minionID_;
+	Log(str.str());
+
+	// if request id isn't in map - ignore the reply
+	WriteIterator found(m_writeRequests.find(id_));
+
+	if (m_writeRequests.end() == found)
+	{
+		Log("[Master] request ID is not in map - ignoring the reply");
+		return REPLIED_TO_NBD;
+	}
+
+	MappedWriteRequest request = (*found).second;
+	BlockLocations bl = request.data.blockLocations;
+
+	// find minionID_ in vector
+	for (Iterator iter(bl.begin()); iter != bl.end(); ++iter)
+	{
+		// if found minion - remove it 
+		if (minionID_ == (*iter).minionID)
+		{
+			Log("[Master] removing minion's BlockLocation from mapped vector");
+
+			// erase minion from the vector
+			bl.erase(iter);
+
+			// if vector is empty - remove ID from map & cancel timer
+			if (bl.empty())
+			{
+				Log("[Master] vector empty - removing ID from map & canceling timer");
+				m_writeRequests.erase(id_);
+				m_timer.Cancel(request.data.handle);
+			}
+
+			break;
+		}
+	}
+
+	// get RequestStatus
+	RequestStatus status = request.data.status;
+
+	// write to log
+	str.str("");
+	str << "[Master] RequestStatus = " << status;
+	Log(str.str());
+
+	// update RequestStatus
+	request.data.status = REPLIED_TO_NBD;
+
+	return status; 
+}
+
+Timer::Handle Master::SetTimerIMP(protocols::ID id_)
+{
+	Log("[Master] setting timer");
+	Timer::Handle handle = m_timer.Set(TIMEOUT, GetTimerCbIMP(id_));
+	stringstream str;
+	str << "[Master] timer set | handle = " << handle;
+	Log(str.str());
+
+	return handle;
+}
+
+// TODO: make inline?
+Timer::CallBack_type Master::GetTimerCbIMP(protocols::ID id_)
+{
+	// TODO: bind used correctly?
+	return bind(&Master::OnTimerIMP, this, id_);
+}
+
+void Master::OnTimerIMP(protocols::ID id_) //callback passed to Timer::Set
+{
+	// write to log
+	Log("[Master] OnTimerIMP");
+
+	if (m_readRequests.find(id_) != m_readRequests.end())
+	{
+		Log("[Master] ID found in ReadRequests map");
+		OnTimerReadIMP(id_);
+	}
+	else if (m_writeRequests.find(id_) != m_writeRequests.end())
+	{
+		Log("[Master] ID found in WriteRequests map");
+		OnTimerWriteIMP(id_);
+	}
+	else 
+	{
+		// if ID doesn't exist in any map - ignore it
+		Log("[Master] ID wasn't found in map - ignoring it");
+	}
+}
+
+void Master::OnTimerReadIMP(protocols::ID id_) 
+{
+	// write to log
+	Log("[Master] OnTimerReadIMP");
+
+	assert(m_writeRequests.end() == m_writeRequests.find(id_));
+
+	// find id_ in ReadRequests map
+	ReadIterator found(m_readRequests.find(id_));
+
+	BlockLocations requests = (*found).second.data.blockLocations;
+	protocols::os::ReadRequest ospRequest = (*found).second.ospRequest;
+
+	// resend the requests to all minion proxys that haven't replied yet
+	SendReadRequestsIMP(requests, ospRequest); // TODO: can also reset timer?
+
+	// reset the Timer
+	(*found).second.data.handle = SetTimerIMP(id_);
+}
+
+void Master::OnTimerWriteIMP(protocols::ID id_) 
+{
+	// write to log
+	Log("[Master] OnTimerWriteIMP");
+
+	assert(m_readRequests.end() == m_readRequests.find(id_));
+
+	// find id_ in WriteRequests map
+	WriteIterator found(m_writeRequests.find(id_));
+
+	BlockLocations requests = (*found).second.data.blockLocations;
+	protocols::os::WriteRequest ospRequest = (*found).second.ospRequest;
+
+	// resend the requests to all minion proxys that haven't replied yet
+	SendWriteRequestsIMP(requests, ospRequest); 
+	
+	// reset the Timer
+	(*found).second.data.handle = SetTimerIMP(id_);
+}
+
+Master::RequestData Master::ProcessRequestIMP(size_t offset_, 
+                                                 protocols::ID id_)
+{
+	// Translate the request with BlockTable
+	Log("[Master] calling BlockTable::Translate");
+	BlockLocations requests(m_blockTable.Translate(offset_));
+
+	// Set timer
+	Timer::Handle handle = SetTimerIMP(id_);
+
+	// create RequestData to insert in map
+	RequestData data = {handle, NBD_AWAITING_REPLY, requests};
+
+	return data;
+}
+
+// TODO: change requests_ to reference& for for SendWriteRequestsIMP & SendReadRequestsIMP
+void Master::SendWriteRequestsIMP(BlockLocations requests_, 
+                                  protocols::os::WriteRequest ospRequest_)
+{
+	// send the requests to minion proxys
+	for (size_t i = 0; i < requests_.size(); ++i)
+	{
+		BlockTable::BlockLocation curr = requests_[i];
+		minion::WriteRequest minionRequest(ospRequest_, curr.blockOffset);
+
+		// write to log
+		stringstream str;
+		str << "[Master] calling MinionProxy::WriteReq | minionID = " << \
+		curr.minionID << " block = " << curr.blockOffset;
+		Log(str.str()); 
+
 		m_minionProxy.WriteReq(minionRequest);
 	}
 }
 
-//private methods//
-void Master::ReplyReadIMP(protocols::minion::ReadReply reply_)
-{ 
-	assert(m_osPtr != NULL);
+void Master::SendReadRequestsIMP(BlockLocations requests_, 
+                                 protocols::os::ReadRequest ospRequest_)
+{
+	// send the requests to minion proxys
+	for (size_t i = 0; i < requests_.size(); ++i)
+	{
+		BlockTable::BlockLocation curr = requests_[i];
+		minion::ReadRequest minionRequest(ospRequest_, curr.blockOffset);
 
-	os::ReadReply ospReply(reply_.GetID(), reply_.GetStatus(), reply_.GetData());
-	
-	// write to log
-	stringstream str;
-	str << "[Master] calling OsProxy::ReplyRead | status=" << reply_.GetStatus() \
-	<< " buffer=" << reply_.GetData();
-	Log(str.str());
-
-	m_osPtr->ReplyRead(ospReply);
-}
-
-void Master::ReplyWriteIMP(protocols::minion::WriteReply reply_) 
-{ 
-	assert(m_osPtr != NULL);
-
-	os::WriteReply ospReply(reply_.GetID(), reply_.GetStatus());
-
-	// write to log
-	stringstream str;
-	str << "[Master] calling OsProxy::ReplyWrite | status=" << reply_.GetStatus();
-	Log(str.str());
-
-	m_osPtr->ReplyWrite(ospReply);
+		// write to log
+		stringstream str;
+		str << "[Master] calling MinionProxy::ReadReq | minionID = " << \
+		curr.minionID << " block = " << curr.blockOffset;
+		Log(str.str()); 
+		
+		m_minionProxy.ReadReq(minionRequest);
+	}
 }
 
 } // namespace ilrd
