@@ -33,14 +33,25 @@ void Encryptor::SendTaskToThreadPoolIMP(CallBack cb_, Buffer buff_)
 	//set event
 	Eventer::Handle handle = m_eventer.SetEvent(cb_); //thread safe function
 	
-	ilrd::Log("[Encryptor] add encryption task to thread pool");
+	{
+		std::stringstream msg;
+		msg << "[Encryptor] event no. is: " << handle << std::endl;
+		ilrd::Log(msg.str());
+	}
+
+	ilrd::Log("[Encryptor] add task to thread pool");
 	//add task to thread pool (using default priority : MEDIUM)
 	m_threadPool.Add(boost::bind(&Encryptor::EncryptDecryptIMP, this, handle, buff_)); //thread safe function
 }
 
 void Encryptor::EncryptDecryptIMP(Eventer::Handle handle_, Buffer buff_)
 {
-	ilrd::Log("[Encryptor] stating encryption/decryption task");
+	{
+		std::stringstream msg;
+		msg << "[Encryptor] task no. " << handle_ <<" is starting"<< std::endl;
+		ilrd::Log(msg.str());
+	}
+
 	char key = 'K'; //Any char will work
     
 	size_t size = buff_->size();
@@ -50,8 +61,16 @@ void Encryptor::EncryptDecryptIMP(Eventer::Handle handle_, Buffer buff_)
         buff_->at(i) ^= key;
 	}
 
-	ilrd::Log("[Encryptor] encryption/decryption task finished");
-	ilrd::Log("[Encryptor] signaling event");
+	{
+		std::stringstream msg;
+		msg << "[Encryptor] task no. " << handle_ <<" is finished"<< std::endl;
+		ilrd::Log(msg.str());
+	}
+	{
+		std::stringstream msg;
+		msg << "[Encryptor] signaling event no. " << handle_ << std::endl;
+		ilrd::Log(msg.str());
+	}
 	//signal event completed
 	m_eventer.SignalEvent(handle_);
 }
