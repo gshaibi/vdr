@@ -6,4 +6,5 @@
 !*.hpp
 !Makefile
 !*.sh
+!*.conf
 !*.gitignore
