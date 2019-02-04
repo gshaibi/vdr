@@ -59,6 +59,11 @@ TestResult BasicEncryption()
 	
 	boost::thread thread(&ReacRun, &reactor);
 
+	sleep(1);
+	
+	REQUIRE(strcmp(&buff_->at(0), "Chalil") != 0);
+	REQUIRE(strcmp(&buff2_->at(0), "Maxim") != 0);
+
 	encryptor.Decrypt(OnFinish(buff_),buff_);
 	encryptor.Decrypt(OnFinish(buff2_),buff2_);
 
