@@ -95,10 +95,6 @@ void Master::ReplyReadIMP(protocols::minion::ReadReply rep_)
 
 	assert(m_osPtr != NULL);
 
-	// process reply
-	Log("[Master] calling ProcessReplyIMP");
-
-	// RequestStatus status = ProcessReplyIMP(rep_.GetID(), rep_.GetMinionID());
 	RequestStatus status = ProcessReadReplyIMP(rep_.GetID(), rep_.GetMinionID());
 	
 	// write to log
@@ -131,10 +127,6 @@ void Master::ReplyWriteIMP(protocols::minion::WriteReply rep_)
 
 	assert(m_osPtr != NULL);
 
-	// process reply
-	Log("[Master] calling ProcessReplyIMP");
-	
-	// RequestStatus status = ProcessReplyIMP(rep_.GetID(), rep_.GetMinionID());
 	RequestStatus status = ProcessWriteReplyIMP(rep_.GetID(), rep_.GetMinionID());
 
 	// write to log
@@ -165,6 +157,7 @@ Master::RequestStatus Master::ProcessReadReplyIMP(protocols::ID id_, size_t mini
 	// write to log
 	stringstream str;
 	str << "[Master] ProcessReadReplyIMP | minionID = " << minionID_;
+	// DEBUG(str << "ID = " << id_;)
 	Log(str.str());
 
 	// if request id isn't in map - ignore the reply
@@ -172,7 +165,7 @@ Master::RequestStatus Master::ProcessReadReplyIMP(protocols::ID id_, size_t mini
 	
 	if (m_readRequests.end() == found)
 	{
-		Log("[Master] request ID is not in map - ignoring the reply");
+		Log("[Master] ERROR: request ID is not in ReadMap - ignoring the reply");
 		return REPLIED_TO_NBD;
 	}
 
@@ -228,7 +221,7 @@ Master::RequestStatus Master::ProcessWriteReplyIMP(protocols::ID id_, size_t min
 
 	if (m_writeRequests.end() == found)
 	{
-		Log("[Master] request ID is not in map - ignoring the reply");
+		Log("[Master] ERROR: request ID is not in WriteMap - ignoring the reply");
 		return REPLIED_TO_NBD;
 	}
 
@@ -284,7 +277,7 @@ Timer::Handle Master::SetTimerIMP(protocols::ID id_)
 }
 
 // TODO: make inline?
-Timer::CallBack_type Master::GetTimerCbIMP(protocols::ID id_)
+Timer::CallBack Master::GetTimerCbIMP(protocols::ID id_)
 {
 	// TODO: bind used correctly?
 	return bind(&Master::OnTimerIMP, this, id_);
@@ -308,7 +301,7 @@ void Master::OnTimerIMP(protocols::ID id_) //callback passed to Timer::Set
 	else 
 	{
 		// if ID doesn't exist in any map - ignore it
-		Log("[Master] ID wasn't found in map - ignoring it");
+		Log("[Master] ERROR: ID wasn't found in map - ignoring it");
 	}
 }
 

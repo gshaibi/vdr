@@ -5,6 +5,7 @@
 #include <cstddef> //size_t
 #include <vector>
 
+
 #include <linux/types.h> //using __be64 __be32 in udp protocol
 
 namespace minion
@@ -22,6 +23,7 @@ class MinionProxy;
 namespace protocols
 {
 
+
 class ID
 {
 public:
@@ -29,19 +31,30 @@ public:
 	// generated cctor and dtor.
 
 	bool operator<(const ID& other_) const; //to be used as comparable key in containers
-
 private:
 	friend class ilrd::OsProxy;
 	friend class ilrd::MinionProxy;
 	friend class ::minion::MasterProxy;
 	friend class ::minion::Minion;
-
 	const char* GetID() const;
 
 	static const size_t ID_ARR_SIZE = 8;
 
 	char m_id[ID_ARR_SIZE];
+
+	// DEBUG
+	// (
+	// friend ostream& operator<<(ostream& os_, const ID& id_);
+	// )
 };
+
+// DEBUG
+// (
+// ostream& operator<<(ostream& os_, const ID& id_)
+// {
+// 	return	os_ << size_t(id_.GetID);
+// }
+// )
 
 namespace os
 {
