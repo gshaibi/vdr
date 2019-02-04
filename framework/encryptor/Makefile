@@ -7,23 +7,25 @@ INCS= ../thread_pool/ ../include/ ../communication/include/ ../../include/
 INCLUDES=$(patsubst %, -I%, $(INCS))
 TARGETS=encryptor 
 OBJS=$(patsubst %, %.o, $(TARGETS))
-SHLIBS_DIRS=../../vdr/protocols ../../framework/communication ../../vdr/master ../../vdr/os_proxy ../thread_pool/ ../eventer .
+SHLIBS_DIRS=/home/beyond/vdr/framework/thread_pool/ /home/beyond/vdr/framework/eventer/ /home/beyond/vdr/framework/communication/ .
 SHLIBS_PATH=$(patsubst %, -L%, $(SHLIBS_DIRS))
 SHLIBS_PATHS_COLLON_SEP=$(subst $(space),:,$(SHLIBS_DIRS))
-SHLIBS=master os_proxy pthread boost_thread boost_system protocols communication eventer
+SHLIBS=pthread boost_thread boost_system communication eventer
 SHLIBS_LINK=$(patsubst %, -l%, $(SHLIBS))
 
 #TODO: thread_pool shared lib name is not conventional
 libencryptor.so: $(OBJS) 
-	$(CC) $(CPPFLAGS) $^ -o $@ ../thread_pool/thread_pool.so $(SHLIBS_LINK)
+	$(CC) $(CPPFLAGS) $^ -o $@ 
 
-test: libencryptor.so test.out 
+test: libs libencryptor.so test.out | libs 
 
 test.out: encryptor_test.cpp 
 	$(CC) $(ELFFLAGS) $< -o $@  -Wl,-rpath=$(SHLIBS_PATHS_COLLON_SEP) $(SHLIBS_LINK) libencryptor.so ../thread_pool/thread_pool.so
 
-$(SHLIBS_DIRS):
-	$(MAKE) --directory=$@
+libs: 
+	cd /home/beyond/vdr/framework/thread_pool/ && $(MAKE)
+	cd /home/beyond/vdr/framework/eventer/ && $(MAKE)
+	cd /home/beyond/vdr/framework/communication/ && $(MAKE)
 
 
 .PHONY: clean 
