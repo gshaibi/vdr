@@ -11,18 +11,13 @@
 namespace ilrd
 {
 
-App::App(const std::string& devicePath_, size_t numBlocks_)
+App::App(const std::string& devicePath_, size_t numBlocks_, const std::vector<sockaddr_in> minionAddrs)
 {
 	Log("Constructing Reactor");
 	Reactor r;
 
-	sockaddr_in minionAddr;
-	minionAddr.sin_family = AF_INET;
-	minionAddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-	minionAddr.sin_port = htons(3000);
-
 	Log("Constructing Master");
-	Master m(1, r, minionAddr);
+	Master m(1, r, minionAddrs[0]);
 
 	Log("Constructing OsProxy");
 	OsProxy os(r, devicePath_, numBlocks_, m);

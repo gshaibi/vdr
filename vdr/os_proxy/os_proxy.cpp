@@ -76,7 +76,7 @@ void OsProxy::InitNbdIMP(size_t deviceNumBlocks_, const std::string &devicePath_
 	Log("Clearing Nbd socket");
     if (-1 == ioctl(*nbdFd, NBD_CLEAR_SOCK))
     {
-        throw std::runtime_error("ioctl error. check errno.");
+        throw std::runtime_error("NBD_CLEAR_SOCK ioctl error. check errno.");
     }
 
 	//FIXME: log
@@ -85,25 +85,25 @@ void OsProxy::InitNbdIMP(size_t deviceNumBlocks_, const std::string &devicePath_
 	Log(s.str());
     if (-1 == ioctl(*nbdFd, NBD_SET_SOCK, socket_))
     {
-        throw std::runtime_error("ioctl error. check errno.");
+        throw std::runtime_error("NBD_SET_SOCK ioctl error. check errno.");
     }
 
 	Log("Setting Timeout of nbd to infinity");
 	if (-1 == ioctl(*nbdFd, NBD_SET_TIMEOUT, 99999999))
 	{
-		throw std::runtime_error("ioctl error. check errno.");
+		throw std::runtime_error("NBD_SET_TIMEOUT ioctl error. check errno.");
 	}
 
 	Log("Setting block size");
 	if (-1 == ioctl(*nbdFd, NBD_SET_BLKSIZE, 0x1000))
 	{
-		throw std::runtime_error("ioctl error. check errno.");
+		throw std::runtime_error("NBD_SET_BLKSIZE ioctl error. check errno.");
 	}
 
 	Log("Setting num blocks");
 	if (-1 == ioctl(*nbdFd, NBD_SET_SIZE_BLOCKS, deviceNumBlocks_))
 	{
-		throw std::runtime_error("ioctl error. check errno.");
+		throw std::runtime_error("NBD_SET_SIZE_BLOCKS ioctl error. check errno.");
 	}
 
 	Log("Creating nbdRespirator thread");

@@ -27,6 +27,12 @@ Eventer::Eventer(Reactor& reactor_):
 		ilrd::Log("[Eventer] create pipe failed");
 		throw std::runtime_error(strerror(errno));
 	}
+
+	{
+		std::stringstream msg;
+		msg << "[Eventer] ctor pipe no. READ = " << m_pipe[READ] <<" WRITE = "<< m_pipe[WRITE]<<std::endl;
+		ilrd::Log(msg.str());
+	}
 }
 
 Eventer::~Eventer() noexcept
@@ -37,7 +43,7 @@ Eventer::~Eventer() noexcept
 	{
 		{
 		std::stringstream msg;
-		msg << "[Eventer] removing fd " << m_pipe[READ]<<" to reactor" <<std::endl;
+		msg << "[Eventer] removing fd " << m_pipe[READ]<<" from reactor" <<std::endl;
 		ilrd::Log(msg.str());
 		}
 		m_reactor.RemFD(m_pipe[READ], Reactor::READ);
@@ -99,7 +105,7 @@ void Eventer::SignalEvent(Handle handle_)
 	
 	{
 		std::stringstream msg;
-		msg << "[Eventer] event id " << handle_ <<" signaled"<< std::endl;
+		msg << "[Eventer] event id " << handle_ <<" signaled"<< " fd = "<<m_pipe[WRITE]<<std::endl;
 		ilrd::Log(msg.str());
 	}
 }

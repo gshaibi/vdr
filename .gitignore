@@ -6,4 +6,6 @@
 !*.hpp
 !Makefile
 !*.sh
+!*.conf
 !*.gitignore
+celebrite.c
