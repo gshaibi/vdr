@@ -87,13 +87,13 @@ void MasterProxy::ConstructReplyImp(ilrd::protocols::minionUDP::reply* rep_,
 {
 	std::memcpy(rep_->ID, id_.GetID(), sizeof(rep_->ID));
 	rep_->type = htonl(type_);
-	rep_->status = htonl(status_);
+	rep_->status = htonl(status_); 
 }
 
 void MasterProxy::SendReplyImp(const ilrd::protocols::minionUDP::reply& rep_)
 {
 	ilrd::Log("MasterProxy: Sending reply to master");
-	
+
 	if (sizeof (rep_) != sendto(m_udpSock, &rep_, sizeof(rep_), MSG_DONTWAIT, (sockaddr *)&m_vdrAddr, sizeof(m_vdrAddr)))
 	{
 		ilrd::Log("Error sending reply to master");

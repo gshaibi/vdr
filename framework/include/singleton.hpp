@@ -9,7 +9,6 @@
 namespace ilrd
 {
 
-
 template <typename T>
 class Singleton : private boost::noncopyable
 {
@@ -19,7 +18,7 @@ public:
 private:
 	static void Deleter();
 	static T * s_instance; //TODO: used also as shouldInit... maybe abusish
-	static boost::atomic<bool> s_shouldInit; 
+	static boost::atomic<bool> s_shouldInit;
 	static boost::atomic<bool> s_isReady;
 };
 
