@@ -2,19 +2,20 @@
 #include <boost/thread/locks.hpp> // unique lock
 #include <boost/bind.hpp> // include "this" in thread function
 
+#include <libconfig.h++> // configure ostream and minimal type of log messages
+
 #include <pthread.h> // forcefully cancel thread in dtor
 #include <cassert> // asserts
 
 #include "logger.hpp" // implementation hpp file
 #include "singleton.hpp" // provides access to configurations
-#include "config.hpp" // configure ostream and minimal type of log messages
 
 namespace ilrd
 {
 
 //**************************** GET LOGGER INSTANCE *****************************
 
-Logger *GetLoggerInstance(msgType type, std::ostream logObject)
+Logger *Logger::GetLoggerInstance()
 {
     bool tmpTrue = true;
 
@@ -23,9 +24,11 @@ Logger *GetLoggerInstance(msgType type, std::ostream logObject)
 
         if (Logger::s_shouldInit.compare_exchange_strong(tmpTrue, false, boost::memory_order_acquire))
         {
+            Singleton<libconfig::Config> cfg;
+            
             std::ostream logObject;
 
-            Logger::msgType minimalMsgType = config;
+            Logger::msgType minimalMsgType = cfg.GetInstance().lookup("");
 
             if (type < INFO || type > SPECIAL)
             {
