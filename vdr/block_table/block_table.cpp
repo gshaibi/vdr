@@ -12,23 +12,14 @@ BlockTable::BlockTable(size_t blkSize_, size_t numBlks_, size_t numMinions_):
 {
 	size_t numBlkGroups(m_numMinions);
 
-    // Block mainGroupStartBlk(0);
-    // Block backupGroupStartBlk(m_numBlocksPerGroup);
-
     for (size_t blkGroup = 0; blkGroup < numBlkGroups; ++blkGroup)
     {
 		for(size_t i = 0; i < GROUPS_PER_MINION; i++)
 		{
 			m_blkGroup2Location.insert(
-			std::make_pair(blkGroup, BlockGroupLocation{(blkGroup + i) %numMinions_, i * m_numBlocksPerGroup}));
+			std::make_pair(blkGroup, 
+				BlockGroupLocation{ (blkGroup + i) %numMinions_, i * m_numBlocksPerGroup }));
 		}
-        // MinionID mainMinion(blkGroup);
-        // MinionID backupMinion((mainMinion + 1) % numMinions_);
-
-        // m_blkGroup2Location.insert(
-		// 	std::make_pair(blkGroup, BlockGroupLocation{mainMinion, mainGroupStartBlk}));
-		// m_blkGroup2Location.insert(
-		// 	std::make_pair(blkGroup, BlockGroupLocation{backupMinion, backupGroupStartBlk}));
     }
 }
 
@@ -39,13 +30,16 @@ std::vector<BlockTable::BlockLocation> BlockTable::Translate(size_t offset_) con
 	BlockGroup blkGroup = blk / m_numBlocksPerGroup;
 
 	typedef std::unordered_multimap<BlockGroup, BlockGroupLocation>::const_iterator MapIterator;
-	std::pair<MapIterator, MapIterator> respMinions(m_blkGroup2Location.equal_range(blkGroup));
+	
+	std::pair<MapIterator, MapIterator> respMinions(
+										m_blkGroup2Location.equal_range(blkGroup));
 
 	std::vector<BlockTable::BlockLocation> ret;
 
 	for (MapIterator i = respMinions.first; i != respMinions.second; ++i)
 	{
-		ret.push_back(BlockLocation{i->second.m_minion, i->second.m_begin + offsetInGroup});
+		ret.push_back(
+			BlockLocation{i->second.m_minion, i->second.m_begin + offsetInGroup});
 	}
 
 	return ret;
