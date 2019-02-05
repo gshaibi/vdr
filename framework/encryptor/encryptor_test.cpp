@@ -71,6 +71,8 @@ TestResult BasicEncryption()
 	REQUIRE(strcmp(buff_, "Chalil") == 0);
 	REQUIRE(strcmp(buff2_, "Maxim") == 0);
 
+	sleep(1);
+	
 	reactor.Stop();
 
 	thread.detach();
