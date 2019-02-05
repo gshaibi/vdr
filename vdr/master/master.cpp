@@ -25,12 +25,14 @@ Master::Master(size_t nMinions_, Reactor& r_, const sockaddr_in& minionAddr_)
 	m_timer(r_),
 	m_eventer(r_),
 	m_tpool(0),
+	m_encryptor(m_eventer, m_tpool),
 	m_readRequests(),
 	m_writeRequests()
 {
 	// Get config instance
 	Singleton<libconfig::Config> cfg;
-	//TODO: init numthreads with Config.lockup
+
+	// get numthreads from config file
 	int numThreads = 0;
 	try
 	{
@@ -38,6 +40,7 @@ Master::Master(size_t nMinions_, Reactor& r_, const sockaddr_in& minionAddr_)
 	}
 	catch (const libconfig::SettingNotFoundException& nfex)
     {
+		//TODO: write error to log
         std::cerr << "Setting '" << nfex.getPath() << "' is missing from conf file." << std::endl;
     }
 	catch (const libconfig::SettingTypeException& tex)
@@ -45,9 +48,12 @@ Master::Master(size_t nMinions_, Reactor& r_, const sockaddr_in& minionAddr_)
 		std::cout << "Setting '" <<  tex.getPath() << "' doesnt match it's type." << std::endl;
 	}
 	
+	//set num threads 
 	m_tpool.SetNum(numThreads);
+
+	//start threadpool
+	m_tpool.Start();
 	
-	//TODO: init the ThreadPool member (Start)
 	// write to log
 	stringstream str;
 	str << "[Master] ctor: numMinions = " << nMinions_ << " blockSize = " << BLOCK_SIZE;

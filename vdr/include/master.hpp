@@ -17,6 +17,7 @@
 #include "timer.hpp" 				//class Timer
 #include "thread_pool.hpp" // class thread_pool
 #include "eventer.hpp" // class eventer
+#include "encryptor.hpp" //class encryptor
 
 // TODO: exception safety
 // TODO: add timer to Makefile
@@ -80,6 +81,7 @@ private:
 	//TODO[Encryption]: add Eventer and ThreadPool memners
 	Eventer m_eventer;
 	ThreadPool m_tpool;
+	Encryptor m_encryptor;
 
 	// std::map<protocols::ID, MappedRequest> m_sentRequests;
 	std::map<protocols::ID, MappedReadRequest> m_readRequests;
