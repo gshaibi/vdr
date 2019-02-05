@@ -14,20 +14,20 @@ Encryptor::Encryptor(Eventer& eventer_, ThreadPool& threadPool_):
 }
 
 //methods
-void Encryptor::Encrypt(CallBack cb_, Buffer buff_)
+void Encryptor::Encrypt(CallBack cb_, char *buff_, size_t len_)
 {
 	ilrd::Log("[Encryptor] got Encryption request");
-	SendTaskToThreadPoolIMP(cb_, buff_);	
+	SendTaskToThreadPoolIMP(cb_, buff_, len_);	
 }
 
-void Encryptor::Decrypt(CallBack cb_, Buffer buff_)
+void Encryptor::Decrypt(CallBack cb_, char *buff_, size_t len_)
 {
 	ilrd::Log("[Encryptor] got Decryption request");
-	SendTaskToThreadPoolIMP(cb_, buff_);
+	SendTaskToThreadPoolIMP(cb_, buff_, len_);
 }
 
 //methods
-void Encryptor::SendTaskToThreadPoolIMP(CallBack cb_, Buffer buff_)
+void Encryptor::SendTaskToThreadPoolIMP(CallBack cb_, char *buff_, size_t len_)
 {
 	ilrd::Log("[Encryptor] setting new event");
 	//set event
@@ -41,10 +41,10 @@ void Encryptor::SendTaskToThreadPoolIMP(CallBack cb_, Buffer buff_)
 
 	ilrd::Log("[Encryptor] add task to thread pool");
 	//add task to thread pool (using default priority : MEDIUM)
-	m_threadPool.Add(boost::bind(&Encryptor::EncryptDecryptIMP, this, handle, buff_)); //thread safe function
+	m_threadPool.Add(boost::bind(&Encryptor::EncryptDecryptIMP, this, handle, buff_, len_)); //thread safe function
 }
 
-void Encryptor::EncryptDecryptIMP(Eventer::Handle handle_, Buffer buff_)
+void Encryptor::EncryptDecryptIMP(Eventer::Handle handle_, char *buff_, size_t len_)
 {
 	{
 		std::stringstream msg;
@@ -54,11 +54,9 @@ void Encryptor::EncryptDecryptIMP(Eventer::Handle handle_, Buffer buff_)
 
 	char key = 'K'; //Any char will work
     
-	size_t size = buff_->size();
-
-    for (size_t i = 0; i < size; i++)
+    for (size_t i = 0; i < len_; i++)
 	{
-        buff_->at(i) ^= key;
+        buff_[i] ^= key;
 	}
 
 	{
