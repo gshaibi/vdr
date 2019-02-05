@@ -41,20 +41,7 @@ private:
 	static const size_t ID_ARR_SIZE = 8;
 
 	char m_id[ID_ARR_SIZE];
-
-	// DEBUG
-	// (
-	// friend ostream& operator<<(ostream& os_, const ID& id_);
-	// )
 };
-
-// DEBUG
-// (
-// ostream& operator<<(ostream& os_, const ID& id_)
-// {
-// 	return	os_ << size_t(id_.GetID);
-// }
-// )
 
 namespace os
 {

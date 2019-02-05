@@ -157,7 +157,7 @@ Master::RequestStatus Master::ProcessReadReplyIMP(protocols::ID id_, size_t mini
 	// write to log
 	stringstream str;
 	str << "[Master] ProcessReadReplyIMP | minionID = " << minionID_;
-	// DEBUG(str << "ID = " << id_;)
+	str << " ID = " << *(size_t *)(&id_);
 	Log(str.str());
 
 	// if request id isn't in map - ignore the reply
@@ -214,6 +214,7 @@ Master::RequestStatus Master::ProcessWriteReplyIMP(protocols::ID id_, size_t min
 	// write to log
 	stringstream str;
 	str << "[Master] ProcessWriteReplyIMP | minionID = " << minionID_;
+	str << " ID = " << *(size_t *)(&id_);
 	Log(str.str());
 
 	// if request id isn't in map - ignore the reply
@@ -270,7 +271,8 @@ Timer::Handle Master::SetTimerIMP(protocols::ID id_)
 	Log("[Master] setting timer");
 	Timer::Handle handle = m_timer.Set(TIMEOUT, GetTimerCbIMP(id_));
 	stringstream str;
-	str << "[Master] timer set | handle = " << handle;
+	str << "[Master] timer set | Timer handle = " << handle;
+	str << " ID = " << *(size_t *)(&id_);
 	Log(str.str());
 
 	return handle;
@@ -286,7 +288,9 @@ Timer::CallBack Master::GetTimerCbIMP(protocols::ID id_)
 void Master::OnTimerIMP(protocols::ID id_) //callback passed to Timer::Set
 {
 	// write to log
-	Log("[Master] OnTimerIMP");
+	stringstream str;
+	str << "[Master] OnTimerIMP | ID = " << *(size_t *)(&id_);
+	Log(str.str());
 
 	if (m_readRequests.find(id_) != m_readRequests.end())
 	{
@@ -346,8 +350,12 @@ void Master::OnTimerWriteIMP(protocols::ID id_)
 }
 
 Master::RequestData Master::ProcessRequestIMP(size_t offset_, 
-                                                 protocols::ID id_)
+                                              protocols::ID id_)
 {
+	stringstream str;
+	str << "[Master] ProcessRequestIMP | ID = " << *(size_t *)(&id_) << " offset = " << offset_;
+	Log(str.str());
+
 	// Translate the request with BlockTable
 	Log("[Master] calling BlockTable::Translate");
 	BlockLocations requests(m_blockTable.Translate(offset_));

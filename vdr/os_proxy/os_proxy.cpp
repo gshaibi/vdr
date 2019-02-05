@@ -158,6 +158,8 @@ void OsProxy::OnPacketCB(TcpReader::SharedBuffer packet_)
     // Make sure the package is legit (magic)
     assert(ntohl(request.magic) == NBD_REQUEST_MAGIC);
 	DEBUG(std::cerr << "~~~~~~~~~~~~~~~~REQUEST LEN: " <<  ntohl(request.len) << std::endl;)
+	DEBUG(std::cerr << "~~~~~~~~~~~~~~~~REQUEST ID: " <<  *(size_t *)(request.handle) << std::endl;)
+
 	assert(ntohl(request.len) == 0x1000 || ntohl(request.len) == 0); //0 for disconnect request.
     // Determine the packet type.
     switch (ntohl(request.type))
