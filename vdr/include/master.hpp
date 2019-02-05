@@ -15,6 +15,8 @@
 #include "block_table.hpp"  //class BlockTable
 #include "minion_proxy.hpp" //clsas MinionProxy
 #include "timer.hpp" 				//class Timer
+#include "thread_pool.hpp" // class thread_pool
+#include "eventer.hpp" // class eventer
 
 // TODO: exception safety
 // TODO: add timer to Makefile
@@ -75,6 +77,10 @@ private:
 	MinionProxy m_minionProxy;
 	BlockTable m_blockTable;
 	Timer m_timer;
+	//TODO[Encryption]: add Eventer and ThreadPool memners
+	Eventer m_eventer;
+	ThreadPool m_tpool;
+
 	// std::map<protocols::ID, MappedRequest> m_sentRequests;
 	std::map<protocols::ID, MappedReadRequest> m_readRequests;
 	std::map<protocols::ID, MappedWriteRequest> m_writeRequests;

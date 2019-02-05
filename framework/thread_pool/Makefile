@@ -6,7 +6,7 @@ TARGETS=thread_pool
 OBJS=$(patsubst %, %.o, $(TARGETS))
 SHLIBS=-lboost_system -lboost_thread -lboost_chrono -lpthread
 
-thread_pool.so: $(OBJS)
+libthread_pool.so: $(OBJS)
 	$(CC) $(CXXFLAGS) $^ $(SHLIBS) -o $@
 
 test: thread_pool_test.cpp thread_pool.cpp
