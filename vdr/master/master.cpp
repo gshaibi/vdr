@@ -3,7 +3,8 @@
 #include "logger.hpp"
 #include "master.hpp"
 #include "routines.hpp"
-#include "singleton.hpp"
+#include "singleton.hpp" // singleton
+#include <libconfig.h++> // Config
 
 namespace ilrd
 {
@@ -23,11 +24,29 @@ Master::Master(size_t nMinions_, Reactor& r_, const sockaddr_in& minionAddr_)
 	m_blockTable(BLOCK_SIZE),
 	m_timer(r_),
 	m_eventer(r_),
-	m_tpool(2),
+	m_tpool(0),
 	m_readRequests(),
 	m_writeRequests()
 {
+	// Get config instance
+	Singleton<libconfig::Config> cfg;
 	//TODO: init numthreads with Config.lockup
+	int numThreads = 0;
+	try
+	{
+		numThreads = cfg.GetInstance().lookup("numThreads");
+	}
+	catch (const libconfig::SettingNotFoundException& nfex)
+    {
+        std::cerr << "Setting '" << nfex.getPath() << "' is missing from conf file." << std::endl;
+    }
+	catch (const libconfig::SettingTypeException& tex)
+	{
+		std::cout << "Setting '" <<  tex.getPath() << "' doesnt match it's type." << std::endl;
+	}
+	
+	m_tpool.SetNum(numThreads);
+	
 	//TODO: init the ThreadPool member (Start)
 	// write to log
 	stringstream str;
