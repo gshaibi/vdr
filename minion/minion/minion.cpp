@@ -1,6 +1,7 @@
 #include <iostream> // prints
 #include <cstring> // memcpy, memcmp
 #include <cassert> // asserts
+#include <sstream> //string stream
 
 #include "logger.hpp" // writing to log
 #include "minion.hpp" // header file
