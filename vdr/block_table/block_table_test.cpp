@@ -6,24 +6,29 @@
 #include "block_table.hpp"
 #include "unit_test.hpp"
 
-const int NUM_MINIONS = 3;
-const int NUM_BLOCKS = 19;
+const int NUM_MINIONS = 1;
+const int NUM_BLOCKS = 11;
 const int BLOCK_SIZE = 1;
 
 void FillInMap(ilrd::BlockTable::BlockLocation blkLocation_)
 {
 	static bool arr[NUM_MINIONS][NUM_BLOCKS / NUM_MINIONS * 2];
+	static bool shouldPrint = false;
 
 	arr[blkLocation_.minionID][blkLocation_.blkOffset] = true;
 
-	for(size_t minion = 0; minion < sizeof(arr) / sizeof(arr[0]); minion++)
+	if (shouldPrint)
 	{
-		for(size_t offset = 0; offset < sizeof(arr[0]) / sizeof(arr[0][0]); offset++)
+		for(size_t minion = 0; minion < sizeof(arr) / sizeof(arr[0]); minion++)
 		{
-			std::cout << "| " << arr[minion][offset];
+			for(size_t offset = 0; offset < sizeof(arr[0]) / sizeof(arr[0][0]); offset++)
+			{
+				std::cout << "| " << arr[minion][offset];
+			}
+			std::cout  << std::endl;
 		}
-		std::cout  << std::endl;
 	}
+	shouldPrint = !shouldPrint;
 	std::cout << "NEXT" << std::endl;
 }
 
@@ -43,9 +48,13 @@ TestResult Overall()
 	// std::cout << "Offset  " << arr[1].blkOffset << std::endl;
 	
 
+
+
 	for(size_t i = 0; i < NUM_BLOCKS * BLOCK_SIZE; i++)
 	{
 		auto res = bt.Translate(i);
+		std::cout << i << std::endl;
+		REQUIRE(res.size() == 2);
 		std::for_each(res.begin(), res.end(), FillInMap);
 	}
 	

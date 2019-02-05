@@ -12,7 +12,9 @@ namespace ilrd
 class BlockTable : private boost::noncopyable
 {
 public:
-	BlockTable(size_t blkSize_, size_t numblks_, size_t numMinions_);
+	//numMinions_ should divide numBlks_ without remainder.
+	BlockTable(size_t blkSize_, size_t numBlks_, size_t numMinions_);
+	//generated dtor.
 	
 	struct BlockLocation
 	{
