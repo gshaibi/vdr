@@ -1,6 +1,6 @@
 CC=g++
 CXXFLAGS=$(INCLUDES) -ansi -std=c++98 -pedantic-errors -Wall -Wextra -O0 -g3 -fPIC -shared 
-INCS=include ../include ../../include ../../vdr/include ../../framework/communication/include ../minion .
+INCS=include ../include ../../include ../../vdr/include ../../framework/communication/include ../minion . ../../framework/include
 INCLUDES=$(patsubst %, -I%, $(INCS))
 TARGETS=minion 
 OBJS=$(patsubst %, %.o, $(TARGETS))
