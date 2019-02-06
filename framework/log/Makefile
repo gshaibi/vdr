@@ -8,12 +8,12 @@ OBJS=$(patsubst %, %.o, $(TARGETS))
 SHLIBS=
 
 a.out: logger.cpp logger_test.cpp
-	$(CC) $(CPPFLAGS) $^ -o a.out
+	$(CC) $(CPPFLAGS) $^ -o a.out -lconfig++ -lboost_thread -lboost_system -lboost_chrono
 #liblog.so: $(OBJS)
 #	$(CC) $(CPPFLAGS) $^ $(SHLIBS) -o $<.so
 
 clean:
-	-rm *.o *.out *.so
+	-rm *.o *.out *.so kill.txt mofo.txt
 	-clear
 
 .PHONY: clean 

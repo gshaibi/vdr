@@ -1,62 +1,114 @@
-#include <boost/chrono.hpp> // timed join in dtor
-#include <boost/thread/locks.hpp> // unique lock
-#include <boost/bind.hpp> // include "this" in thread function
+#include <boost/bind.hpp> // include "this" in thread function  TODO - maybe get read of this and call thread with "this"?
 
 #include <libconfig.h++> // configure ostream and minimal type of log messages
 
-#include <pthread.h> // forcefully cancel thread in dtor
 #include <cassert> // asserts
+#include <exception> // deals with configuration
 
 #include "logger.hpp" // implementation hpp file
 #include "singleton.hpp" // provides access to configurations
 
+
 namespace ilrd
 {
+
+//***************************** INIT GLOBAL VARIABLES **************************
+
+boost::atomic<bool> Logger::s_isReady(false);
+boost::atomic<bool> Logger::s_shouldInit(true);
+Logger *Logger::s_logger = NULL;
+Logger::msgType Logger::s_minimalMsgType = Logger::INFO;
+std::ostream *Logger::s_logObject = NULL;
 
 //**************************** GET LOGGER INSTANCE *****************************
 
 Logger *Logger::GetLoggerInstance()
 {
-    bool tmpTrue = true;
+    using namespace libconfig;
 
-    if (!Logger::s_isReady)
+    if (!s_isReady)
     {
+        bool tmpTrue = true;
 
-        if (Logger::s_shouldInit.compare_exchange_strong(tmpTrue, false, boost::memory_order_acquire))
+        if (s_shouldInit.compare_exchange_strong(tmpTrue, false, boost::memory_order_acquire))
         {
-            Singleton<libconfig::Config> cfg;
+            Singleton<Config> cfg;
             
-            std::ostream logObject;
+            int minimalMsgType = 0;
+            std::ostream *logObject;
 
-            Logger::msgType minimalMsgType = cfg.GetInstance().lookup("");
-
-            if (type < INFO || type > SPECIAL)
+            try
             {
-                minimalMsgType = Logger::INFO;
+                cfg.GetInstance().readFile("../../conf/master.conf");
             }
 
-            std::string ostreamPath(config);
-
-            if ("default" == config)
+            catch (const SettingNotFoundException &nfex)
             {
-                logObject = std::cerr;
+                std::cerr << "Setting '" << nfex.getPath() << 
+                                    "' is missing from conf file." << std::endl;
             }
 
-            else
-
+            try // check config for minimal type of message to write
             {
-                logObject(ostreamPath.c_str());
+                minimalMsgType = cfg.GetInstance().lookup("LogLevel");
+                
+                if (minimalMsgType < INFO || minimalMsgType > SPECIAL)
+                {
+                    minimalMsgType = INFO;
+                }
             }
 
-            Logger::s_logger = new Logger(minimalMsgType, stream);
-            std::atexit(Logger::Deleter);
-            Logger::s_isReady.store(true, boost::memory_order_seq_cst);
+            catch (const SettingNotFoundException &nfex) // couldnt find in config 
+            {
+                std::cerr << "Setting '" << nfex.getPath() << 
+                                    "' is missing from conf file." << std::endl;
+            }
+
+            catch (const SettingTypeException &tex) // couldnt convert types
+            {
+                std::cout << "Setting '" << tex.getPath() << 
+                                        "' doesnt match it's type." << std::endl;
+            }
+
+            try // check config for stream to write into
+            {
+                std::string ostreamPath = cfg.GetInstance().lookup("LogStream");
+
+                if ("default" == ostreamPath)
+                {
+                    //logObject = &std::cerr;
+                    logObject = &std::cout;
+                }
+
+                else
+
+                {
+                    logObject = new std::ofstream(ostreamPath.c_str());
+                }
+            }
+
+            catch (const SettingNotFoundException &nfex) // couldnt find in config
+            {
+                std::cerr << "Setting '" << nfex.getPath() << 
+                                    "' is missing from conf file." << std::endl;
+            }
+
+            catch (const SettingTypeException &tex) // couldnt convert types
+            {
+                std::cout << "Setting '" << tex.getPath() << 
+                                        "' doesnt match it's type." << std::endl;
+            }
+
+            s_logger = new Logger(static_cast<msgType>(minimalMsgType), logObject);
+            std::atexit(Deleter);
+            s_isReady.store(true, boost::memory_order_seq_cst);
+            (*s_logObject) << "[Logger] Single logger instance created " << std::endl;
         }
         
         else
 
         {
-            while (!Logger::s_isReady.load(boost::memory_order_seq_cst))
+            while (!s_isReady.load(boost::memory_order_seq_cst))
             {
                 boost::this_thread::yield();
             }
@@ -67,23 +119,16 @@ Logger *Logger::GetLoggerInstance()
     return s_logger;
 }
 
-//**************************** GENERAL LOG FUNCTION ****************************
-
-void Log(std::string s_, int typeMsg)
-{
-    Logger *logger = Logger::GetLoggerInstance();
-    logger->Log(s_.c_str(), static_cast<Logger::msgType>(typeMsg));
-}
-
 //********************************* CTOR ***************************************
 
-Logger::Logger(msgType type, std::ostream &logObject): m_Q(),
-                                                       m_minimalMsgType(type),
-                                                       m_logObject(logObject)
+Logger::Logger(msgType type, std::ostream *logObject): m_Q()
 {
+    s_minimalMsgType = type;
+    s_logObject = logObject;
+
     // create thread
-    boost::scoped_thread<> executor(&Logger::ThreadReadFromQ, this); // joins itself at exit
-    m_logObject << "[Logger] Ctor" << std::endl;
+   m_thread = new boost::thread(boost::bind(&Logger::ThreadReadFromQ, this));
+   (*s_logObject) << "[Logger] Ctor()" << std::endl;
 }
 
 //********************************* DTOR ***************************************
@@ -93,16 +138,19 @@ Logger::~Logger()
     //add termination task. the scoped thread will close itself
     std::pair<char *, msgType> terminator("[Logger] terminate thread request", TERM);
     m_Q.Enqueue(terminator);
+    m_thread->join();
+    (*s_logObject) << "[Logger] Dtor()" << std::endl;
 }
 
 //********************************** LOG ***************************************
 
-void Logger::Log(const char *msg, msgType type)
+void Logger::WriteLog(const char *msg, msgType type)
 {
     assert(type > TERM && type <= SPECIAL); // TERM is sent only at Dtor
 
-    if (type >= m_minimalMsgType)
+    if (type >= s_minimalMsgType)
     {
+        (*s_logObject) << "[Logger] WriteLog()" << std::endl;
         Message itemToInsert(const_cast<char *>(msg), type);
         m_Q.Enqueue(itemToInsert);
     }
@@ -120,10 +168,11 @@ void Logger::ThreadReadFromQ()
 
         if (TERM == msgToWrite.second) // TERM sent at Dtor
         {
+            (*s_logObject) << "[Logger] Termination Signal recieved by thread" << std::endl;
             return;
         }
 
-        m_logObject << "Message Type: " << msgToWrite.second << " Message: " 
+        (*s_logObject) << "Message Type: " << msgToWrite.second << " Message: " 
                                                << msgToWrite.first << std::endl;
     }
 }
