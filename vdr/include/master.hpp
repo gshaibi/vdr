@@ -28,7 +28,7 @@ namespace ilrd
 class Master : boost::noncopyable
 {
 public:
-	Master(size_t numMinions_, Reactor& r_, const sockaddr_in&); 
+	Master(size_t numMinions_, Reactor& r_, const std::vector<sockaddr_in> minionAddrs); 
 	// NOTE: Object is incomplete before calling SetOsProxy.
 	// using generated dtor. Blocked cctor & op=
 
@@ -75,7 +75,7 @@ private:
 	
 	//data members//
 	OsProxy *m_osPtr;
-	MinionProxy m_minionProxy;
+	std::vector<boost::shared_ptr<MinionProxy> > m_minionProxies;
 	BlockTable m_blockTable;
 	Timer m_timer;
 	

@@ -1,5 +1,5 @@
 #include <cassert>	// assert
-
+#include <arpa/inet.h>	// inet_ntop
 #include "logger.hpp"
 #include "master.hpp"
 #include "routines.hpp"
@@ -18,9 +18,9 @@ using namespace protocols; //os/minion reply/request protocols
 boost::chrono::steady_clock::duration Master::TIMEOUT(TIMEOUT_IN_NANOSECONDS); 
 
 //ctor//
-Master::Master(size_t nMinions_, Reactor& r_, const sockaddr_in& minionAddr_)
+Master::Master(size_t nMinions_, Reactor& r_, const std::vector<sockaddr_in> minionAddr_)
 : m_osPtr(NULL),
-	m_minionProxy(0, *this, r_, minionAddr_),
+	m_minionProxies(),
 	m_blockTable(BLOCK_SIZE),
 	m_timer(r_),
 	m_eventer(r_),
@@ -29,6 +29,21 @@ Master::Master(size_t nMinions_, Reactor& r_, const sockaddr_in& minionAddr_)
 	m_readRequests(),
 	m_writeRequests()
 {
+	// initialize the proxy minions
+	for (int i = 0; i < nMinions_; ++i)
+	{
+		{
+			stringstream str;
+			char* minionIP = NULL;
+			inet_ntop(minionAddr_[i].sin_family, &minionAddr_[i].sin_addr.s_addr, minionIP, (socklen_t)50);
+			str << "[Master] ctor: minionID = " << i << " IP address = " <<  minionIP;
+			Log(str.str());
+		}
+		m_minionProxies.push_back(boost::shared_ptr<MinionProxy>(
+									new MinionProxy(i, *this, r_, minionAddr_[i])));
+	}
+	
+	
 	// Get config instance
 	Singleton<libconfig::Config> cfg;
 
@@ -435,7 +450,7 @@ void Master::SendWriteRequestsIMP(protocols::ID id_)
 		curr.minionID << " block = " << curr.blockOffset;
 		Log(str.str()); 
 
-		m_minionProxy.WriteReq(minionRequest);
+		m_minionProxies[curr.minionID]->WriteReq(minionRequest);
 	}
 }
 
@@ -459,7 +474,7 @@ void Master::SendReadRequestsIMP(protocols::ID id_)
 		curr.minionID << " block = " << curr.blockOffset;
 		Log(str.str()); 
 		
-		m_minionProxy.ReadReq(minionRequest);
+		m_minionProxies[curr.minionID]->ReadReq(minionRequest);
 	}
 }
 
