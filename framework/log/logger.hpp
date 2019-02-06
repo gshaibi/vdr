@@ -15,11 +15,8 @@
 namespace ilrd
 {
 
-class Logger: boost::noncopyable
+namespace LogMsgTypes
 {
-
-public:
-
 	enum msgType {
 		TERM = 0,
 		INFO = 1,
@@ -27,17 +24,24 @@ public:
 		ERROR = 3,
 		SPECIAL = 4
 	};
+} // namespace LogMsgTypes
+
+class Logger: boost::noncopyable
+{
+
+public:
+
 
 	~Logger(); // thread safe closure
 
-	void WriteLog(const char *msg, msgType type);
+	void WriteLog(const char *msg, LogMsgTypes::msgType type);
 	static Logger *GetLoggerInstance();
 
 private:
 
-	typedef std::pair<char *, msgType> Message;
+	typedef std::pair<char *, LogMsgTypes::msgType> Message;
 
-	Logger(msgType type = INFO, std::ostream *logObject = &std::cerr);
+	Logger(LogMsgTypes::msgType type = LogMsgTypes::INFO, std::ostream *logObject = &std::cerr);
 	void ThreadReadFromQ(); // thread will use it to read from the Q
 	inline static void Deleter();
 
@@ -45,33 +49,28 @@ private:
 	static boost::atomic<bool> s_shouldInit;
 	static boost::atomic<bool> s_isReady;
 
-	WaitableQ<Message> m_Q;
-	boost::thread *m_thread;
-	static msgType s_minimalMsgType; // the minimal value of message type to write to log
-	static std::ostream *s_logObject; // where the logs will be written to
+	WaitableQ<Message> m_messages;
+	LogMsgTypes::msgType m_minimalMsgType; // the minimal value of message type to write to log
+	std::ostream *m_logObject; // where the logs will be written to
+	boost::thread m_messageWriter;
 };
 
 //******************************* LOGGER DELETER *******************************
 
 inline void Logger::Deleter()
 {
-	(*s_logObject) << "[Logger] Deleter()" << std::endl;
+	(*(s_logger->m_logObject)) << "[Logger] Deleter()" << std::endl;
+
 	delete s_logger;
 	s_logger = NULL;
-
-	if (s_logObject != &std::cerr)
-	{
-		static_cast<std::ofstream *>(s_logObject)->close();
-	}
-
 }
 
 //**************************** GENERAL LOG FUNCTION ****************************
 
-inline void Log(std::string s_, int typeMsg)
+inline void Log(std::string s_, int typeMsg = LogMsgTypes::INFO)
 {
 	Logger *logger = Logger::GetLoggerInstance();
-	logger->WriteLog(s_.c_str(), static_cast<Logger::msgType>(typeMsg));
+	logger->WriteLog(s_.c_str(), static_cast<LogMsgTypes::msgType>(typeMsg));
 }
 
 }//namespace ilrd
