@@ -108,7 +108,7 @@ private:
 	RequestData ProcessRequestIMP(size_t offset_, protocols::ID id_);	  //used in Read & Write
 	RequestStatus ProcessReplyIMP(protocols::ID id_, size_t minionID_); //used in ReplyReadIMP & ReplyWriteIMP
 	void SendWriteRequestsIMP(protocols::ID id_);
-	void SendReadRequestsIMP(BlockLocations, protocols::os::ReadRequest);
+	void SendReadRequestsIMP(protocols::ID id_);
 
 	void ReadReplyToOsProxyCB(protocols::minion::ReadReply rep_); // callback sent to encryptor
 

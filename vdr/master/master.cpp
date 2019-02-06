@@ -89,7 +89,7 @@ void Master::Read(protocols::os::ReadRequest req_)
 	m_readRequests.insert(make_pair(req_.GetID(), to_insert));
 
 	// pass the requests to minion proxys
-	SendReadRequestsIMP(data.blockLocations, req_);
+	SendReadRequestsIMP(req_.GetID());
 }
 
 
@@ -372,7 +372,7 @@ void Master::OnTimerReadIMP(protocols::ID id_)
 	protocols::os::ReadRequest ospRequest = (*found).second.ospRequest;
 
 	// resend the requests to all minion proxys that haven't replied yet
-	SendReadRequestsIMP(requests, ospRequest); // TODO: can also reset timer?
+	SendReadRequestsIMP(id_); // TODO: can also reset timer?
 
 	(*found).second.data.handle = SetTimerIMP(id_);
 }
@@ -423,12 +423,12 @@ void Master::SendWriteRequestsIMP(protocols::ID id_)
 	
 	WriteIterator found(m_writeRequests.find(id_));
 
-	BlockLocations locations = (*found).second.data.blockLocations;
+	BlockLocations requests = (*found).second.data.blockLocations;
 
 	// send the requests to minion proxys
-	for (size_t i = 0; i < locations.size(); ++i)
+	for (size_t i = 0; i < requests.size(); ++i)
 	{
-		BlockTable::BlockLocation curr = locations[i];
+		BlockTable::BlockLocation curr = requests[i];
 		minion::WriteRequest minionRequest((*found).second.ospRequest, curr.blockOffset);
 
 		// write to log
@@ -441,16 +441,19 @@ void Master::SendWriteRequestsIMP(protocols::ID id_)
 	}
 }
 
-void Master::SendReadRequestsIMP(BlockLocations requests_, 
-                                 protocols::os::ReadRequest ospRequest_)
+void Master::SendReadRequestsIMP(protocols::ID id_)
 {
-	assert(m_readRequests.end() != m_readRequests.find(ospRequest_.GetID()));
+	assert(m_readRequests.end() != m_readRequests.find(id_));
 	
+	ReadIterator found(m_readRequests.find(id_));
+
+	BlockLocations requests = (*found).second.data.blockLocations;
+
 	// send the requests to minion proxys
-	for (size_t i = 0; i < requests_.size(); ++i)
+	for (size_t i = 0; i < requests.size(); ++i)
 	{
-		BlockTable::BlockLocation curr = requests_[i];
-		minion::ReadRequest minionRequest(ospRequest_, curr.blockOffset);
+		BlockTable::BlockLocation curr = requests[i];
+		minion::ReadRequest minionRequest((*found).second.ospRequest, curr.blockOffset);
 
 		// write to log
 		stringstream str;
