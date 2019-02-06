@@ -2,7 +2,7 @@
 #define blk_TABLE_HPP
 
 #include <vector> //using std::vector
-#include <unordered_map>
+#include <map>
 
 #include <boost/noncopyable.hpp> //using boost::noncopyable
 
@@ -19,7 +19,7 @@ public:
 	struct BlockLocation
 	{
 		size_t minionID;
-		size_t blkOffset;
+		size_t blockOffset;
 	};
 
 	std::vector<BlockLocation> Translate(size_t offset_) const;
@@ -33,7 +33,7 @@ private:
 	const size_t m_numMinions; //TODO: Maybe numBlkGroups instead?
 	const size_t m_numBlocksPerGroup;
 
-	const size_t GROUPS_PER_MINION = 2; //TODO: Config? Name?
+	const static size_t GROUPS_PER_MINION = 2; //TODO: Config? Name?
 
 	struct BlockGroupLocation //TODO: Maybe pair instead?
 	{
@@ -41,7 +41,7 @@ private:
 		Block m_begin;
 	};
 	
-	std::unordered_multimap<BlockGroup, BlockGroupLocation> m_blkGroup2Location;
+	std::multimap<BlockGroup, BlockGroupLocation> m_blkGroup2Location;
 };//class BlockTable
 
 } // namespace ilrd
