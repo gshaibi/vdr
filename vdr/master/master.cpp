@@ -12,10 +12,10 @@ using namespace protocols; //os/minion reply/request protocols
 
 /***********************************Master*************************************/
 //ctor//
-Master::Master(size_t nMinions_, Reactor& r_, const sockaddr_in& minionAddr_)
+Master::Master(size_t nMinions_, size_t numBlocks_, Reactor& r_, const sockaddr_in& minionAddr_)
 : m_osPtr(NULL),
 	m_minionProxy(0, *this, r_, minionAddr_),
-	m_blockTable(BLOCK_SIZE) 
+	m_blockTable(BLOCK_SIZE, numBlocks_, nMinions_)
 {
 	// write to log
 	stringstream str;

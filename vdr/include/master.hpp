@@ -21,7 +21,7 @@ namespace ilrd
 class Master : boost::noncopyable
 {
 public:
-	Master(size_t numMinions_, Reactor& r_, const sockaddr_in&); 
+	Master(size_t numMinions_, size_t numBlocks_, Reactor& r_, const sockaddr_in&); 
 	// NOTE: Object is incomplete before calling SetOsProxy.
 	// using generated dtor. Blocked cctor & op=
 

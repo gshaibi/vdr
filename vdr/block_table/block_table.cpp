@@ -30,8 +30,8 @@ BlockTable::Translate(size_t offset_) const
     size_t offsetInGroup = blk % m_numBlocksPerGroup;
     BlockGroup blkGroup = blk / m_numBlocksPerGroup;
 
-    typedef std::unordered_multimap<
-        BlockGroup, BlockGroupLocation>::const_iterator MapIterator;
+    typedef std::multimap<BlockGroup, 
+												BlockGroupLocation>::const_iterator MapIterator;
 
     std::pair<MapIterator, MapIterator> respMinions(
         m_blkGroup2Location.equal_range(blkGroup));
