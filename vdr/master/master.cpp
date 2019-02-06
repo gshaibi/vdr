@@ -173,7 +173,7 @@ void Master::ReplyWriteIMP(protocols::minion::WriteReply rep_)
 	}
 }
 
-//call back function in use as a Decrypt call back
+////ReadReplyToOsProxyIMP is passed as a callback to Decrypt
 void Master::ReadReplyToOsProxyIMP(protocols::minion::ReadReply rep_)
 {
 	os::ReadReply ospReply(rep_.GetID(), rep_.GetStatus(), rep_.GetData());
@@ -414,6 +414,7 @@ Master::RequestData Master::ProcessRequestIMP(size_t offset_,
 }
 
 // TODO: change requests_ to reference& for for SendWriteRequestsIMP & SendReadRequestsIMP
+//SendWriteRequestsIMP is passed as a callback to Encrypt
 void Master::SendWriteRequestsIMP(protocols::ID id_)
 {
 	assert(m_writeRequests.end() != m_writeRequests.find(id_));
