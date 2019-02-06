@@ -137,7 +137,7 @@ void Master::ReplyReadIMP(protocols::minion::ReadReply rep_)
 	if (NBD_AWAITING_REPLY == status)
 	{
 		//Decrypt befor send reply to os
-		m_encryptor.Decrypt(boost::bind(&Master::ReadReplyToOsProxyCB, this, rep_),
+		m_encryptor.Decrypt(boost::bind(&Master::ReadReplyToOsProxyIMP, this, rep_),
 							const_cast<char*>(&rep_.GetData()->at(0)), BLOCK_SIZE);
 	}
 }
@@ -174,7 +174,7 @@ void Master::ReplyWriteIMP(protocols::minion::WriteReply rep_)
 }
 
 //call back function in use as a Decrypt call back
-void Master::ReadReplyToOsProxyCB(protocols::minion::ReadReply rep_)
+void Master::ReadReplyToOsProxyIMP(protocols::minion::ReadReply rep_)
 {
 	os::ReadReply ospReply(rep_.GetID(), rep_.GetStatus(), rep_.GetData());
 
@@ -367,9 +367,6 @@ void Master::OnTimerReadIMP(protocols::ID id_)
 
 	// find id_ in ReadRequests map
 	ReadIterator found(m_readRequests.find(id_));
-
-	BlockLocations requests = (*found).second.data.blockLocations;
-	protocols::os::ReadRequest ospRequest = (*found).second.ospRequest;
 
 	// resend the requests to all minion proxys that haven't replied yet
 	SendReadRequestsIMP(id_); // TODO: can also reset timer?

@@ -107,10 +107,10 @@ private:
 	void OnTimerWriteIMP(protocols::ID); //cb passed to Timer
 	RequestData ProcessRequestIMP(size_t offset_, protocols::ID id_);	  //used in Read & Write
 	RequestStatus ProcessReplyIMP(protocols::ID id_, size_t minionID_); //used in ReplyReadIMP & ReplyWriteIMP
-	void SendWriteRequestsIMP(protocols::ID id_);
+	void SendWriteRequestsIMP(protocols::ID id_); // callback passed to encryptor
 	void SendReadRequestsIMP(protocols::ID id_);
 
-	void ReadReplyToOsProxyCB(protocols::minion::ReadReply rep_); // callback sent to encryptor
+	void ReadReplyToOsProxyIMP(protocols::minion::ReadReply rep_); // callback passed to encryptor
 
 	// TODO: these instead of ProcessReplyIMP? need to unite duplicate code...
 	RequestStatus ProcessReadReplyIMP(protocols::ID id_, size_t minionID_);
