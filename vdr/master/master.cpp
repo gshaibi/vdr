@@ -110,9 +110,9 @@ void Master::Write(protocols::os::WriteRequest req_)
 	MappedWriteRequest to_insert = {data, req_};
 	m_writeRequests.insert(make_pair(req_.GetID(), to_insert));
 
-	// pass the requests to minion proxys
-	//TODO: encrypt data - use SendWriteRequestsIMP as a call back
-	SendWriteRequestsIMP(data.blockLocations, req_);
+	// encrypt data then SendWriteRequestsIMP
+	m_encryptor.Encrypt(boost::bind(&Master::SendWriteRequestsIMP,this, req_.GetID()), 
+						const_cast<char*>(req_.GetData()), BLOCK_SIZE);
 }
 
 /*******************************private methods********************************/
@@ -136,15 +136,9 @@ void Master::ReplyReadIMP(protocols::minion::ReadReply rep_)
 	//reply to nbd if haven't replied yet
 	if (NBD_AWAITING_REPLY == status)
 	{
-		os::ReadReply ospReply(rep_.GetID(), rep_.GetStatus(), rep_.GetData());
-
-		// write to log
-		stringstream str;
-		str << "[Master] calling OsProxy::ReplyRead | status = " << rep_.GetStatus() \
-		<< " buffer = " << rep_.GetData();
-		Log(str.str());
-
-		m_osPtr->ReplyRead(ospReply);
+		//Decrypt befor send reply to os
+		m_encryptor.Decrypt(boost::bind(&Master::ReadReplyToOsProxyCB, this, rep_),
+							const_cast<char*>(&rep_.GetData()->at(0)), BLOCK_SIZE);
 	}
 }
 
@@ -168,11 +162,6 @@ void Master::ReplyWriteIMP(protocols::minion::WriteReply rep_)
 	//reply to nbd if haven't replied yet
 	if (NBD_AWAITING_REPLY == status)
 	{
-		//TODO: decrypt befor send reply to os
-
-		//TODO wrap the below code in cb func to be used by encryptor(decrypt)
-		//TODO bind with WriteReply rep_
-
 		os::WriteReply ospReply(rep_.GetID(), rep_.GetStatus()); 
 
 		// write to log
@@ -184,17 +173,18 @@ void Master::ReplyWriteIMP(protocols::minion::WriteReply rep_)
 	}
 }
 
-//TODO: ReadReplyToOsProxyCB(protocols::minion::WriteReply rep_)
-// {
-// 	os::WriteReply ospReply(rep_.GetID(), rep_.GetStatus()); 
+//call back function in use as a Decrypt call back
+void Master::ReadReplyToOsProxyCB(protocols::minion::ReadReply rep_)
+{
+	os::ReadReply ospReply(rep_.GetID(), rep_.GetStatus(), rep_.GetData());
 
-// 		// write to log
-// 		stringstream str;
-// 		str << "[Master] calling OsProxy::ReplyWrite | status = " << rep_.GetStatus();
-// 		Log(str.str());
+	// write to log
+	stringstream str;
+	str << "[Master] calling OsProxy::ReplyRead | status = " << rep_.GetStatus();
+	Log(str.str());
 
-// 		m_osPtr->ReplyWrite(ospReply);
-// }
+	m_osPtr->ReplyRead(ospReply);
+}
 
 // TODO: don't need this func?
 //used in Master::Read & Master::Write
@@ -236,6 +226,12 @@ Master::RequestStatus Master::ProcessReadReplyIMP(protocols::ID id_, size_t mini
 			{
 				Log("[Master] vector empty - removing ID from map & canceling timer");
 				m_readRequests.erase(id_);
+				// write to log
+			{
+				str.str("");
+				str << "[Master] cancel timer handle no.  " << request.data.handle;
+				Log(str.str());
+			}
 				m_timer.Cancel(request.data.handle);
 			}
 
@@ -293,6 +289,11 @@ Master::RequestStatus Master::ProcessWriteReplyIMP(protocols::ID id_, size_t min
 			{
 				Log("[Master] vector empty - removing ID from map & canceling timer");
 				m_writeRequests.erase(id_);
+				{
+					str.str("");
+					str << "[Master] cancel timer handle no.  " << request.data.handle;
+					Log(str.str());
+				}
 				m_timer.Cancel(request.data.handle);
 			}
 
@@ -392,7 +393,7 @@ void Master::OnTimerWriteIMP(protocols::ID id_)
 	protocols::os::WriteRequest ospRequest = (*found).second.ospRequest;
 
 	// resend the requests to all minion proxys that haven't replied yet
-	SendWriteRequestsIMP(requests, ospRequest); 
+	SendWriteRequestsIMP(id_); 
 	
 
 	//TODO: remove SetTimeIMP - SendWriteRequestsIMP responsibilty
@@ -413,35 +414,38 @@ Master::RequestData Master::ProcessRequestIMP(size_t offset_,
 
 	// Set timer
 	//TODO: move SetTimer to SendWriteRequestsIMP 
-	Timer::Handle handle = SetTimerIMP(id_);
+	Timer::Handle handle = SetTimerIMP(id_); 
 
 	// create RequestData to insert in map
-	RequestData data = {handle, NBD_AWAITING_REPLY, requests};
+	//TODO: initialization of handle member????
+	RequestData data = {handle , NBD_AWAITING_REPLY, requests};
 
 	return data;
 }
 
 // TODO: change requests_ to reference& for for SendWriteRequestsIMP & SendReadRequestsIMP
-void Master::SendWriteRequestsIMP(BlockLocations requests_, 
-                                  protocols::os::WriteRequest ospRequest_)
+void Master::SendWriteRequestsIMP(protocols::ID id_)
 {
+	assert(m_writeRequests.end() != m_writeRequests.find(id_));
 	//TODO: this function will be used as the encryptor cb
-
 	//TODO: SetTimer and insert to m_writeRequests map before sending
 	//1. Timer::Handle handle = SetTimerIMP(id_);
+	//Timer::Handle handle = SetTimerIMP(id_);
 	//insert time handle to map:
 	//2.							m_writeRequests[id].data.handle = handle
-
+	WriteIterator found(m_writeRequests.find(id_));
+	//(*found).second.data.handle = handle;
 	//TODO: 3. get map element at m_writeRequests[id]
+	
 
 	//m_writeRequests[id].data.blockLocations == requests_
 	//m_writeRequests[id].OspRequest  = ospRequest_
-
+	BlockLocations locations = (*found).second.data.blockLocations;
 	// send the requests to minion proxys
-	for (size_t i = 0; i < requests_.size(); ++i)
+	for (size_t i = 0; i < locations.size(); ++i)
 	{
-		BlockTable::BlockLocation curr = requests_[i];
-		minion::WriteRequest minionRequest(ospRequest_, curr.blockOffset);
+		BlockTable::BlockLocation curr = locations[i];
+		minion::WriteRequest minionRequest((*found).second.ospRequest, curr.blockOffset);
 
 		// write to log
 		stringstream str;
@@ -456,7 +460,17 @@ void Master::SendWriteRequestsIMP(BlockLocations requests_,
 void Master::SendReadRequestsIMP(BlockLocations requests_, 
                                  protocols::os::ReadRequest ospRequest_)
 {
+	assert(m_readRequests.end() != m_readRequests.find(ospRequest_.GetID()));
 	//TODO: SetTimer and insert to map before sending
+	// Timer::Handle handle = SetTimerIMP(ospRequest_.GetID());
+	//ReadIterator found(m_readRequests.find(ospRequest_.GetID()));
+	//(*found).second.data.handle = handle;
+
+	// // write to log
+	// 	stringstream str;
+	// 	str << "[Master] SendReadRequestIMP timer handle = " << \
+	// 	handle << " data.handle = "<< (*found).second.data.handle << std::endl;
+	// 	Log(str.str()); 
 
 	// send the requests to minion proxys
 	for (size_t i = 0; i < requests_.size(); ++i)

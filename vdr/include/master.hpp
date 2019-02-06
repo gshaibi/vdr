@@ -78,7 +78,7 @@ private:
 	MinionProxy m_minionProxy;
 	BlockTable m_blockTable;
 	Timer m_timer;
-	//TODO[Encryption]: add Eventer and ThreadPool memners
+	
 	Eventer m_eventer;
 	ThreadPool m_tpool;
 	Encryptor m_encryptor;
@@ -89,7 +89,7 @@ private:
 
 	//static data members//
 	static const size_t BLOCK_SIZE = 4096; //TODO: remove this when have Config?
-	static const size_t TIMEOUT_IN_NANOSECONDS = 1000000; //used to initialize TIMEOUT
+	static const size_t TIMEOUT_IN_NANOSECONDS = 100000000; //used to initialize TIMEOUT
 	static boost::chrono::steady_clock::duration TIMEOUT; 
 
 	//friend class//
@@ -107,8 +107,10 @@ private:
 	void OnTimerWriteIMP(protocols::ID); //cb passed to Timer
 	RequestData ProcessRequestIMP(size_t offset_, protocols::ID id_);	  //used in Read & Write
 	RequestStatus ProcessReplyIMP(protocols::ID id_, size_t minionID_); //used in ReplyReadIMP & ReplyWriteIMP
-	void SendWriteRequestsIMP(BlockLocations, protocols::os::WriteRequest);
+	void SendWriteRequestsIMP(protocols::ID id_);
 	void SendReadRequestsIMP(BlockLocations, protocols::os::ReadRequest);
+
+	void ReadReplyToOsProxyCB(protocols::minion::ReadReply rep_); // callback sent to encryptor
 
 	// TODO: these instead of ProcessReplyIMP? need to unite duplicate code...
 	RequestStatus ProcessReadReplyIMP(protocols::ID id_, size_t minionID_);
