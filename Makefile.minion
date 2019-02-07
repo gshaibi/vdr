@@ -1,8 +1,10 @@
-CXX=/rpi-tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin/arm-linux-gnueabihf-g++
+#for compiling on Rpi
+
+CXX=g++
 CXXFLAGS=$(INCLUDES) -std=c++11 -pedantic-errors -Wall -Wextra -O0 -g3 -fPIC 
 space :=
 space +=
-INCS=/home/beyond include/ vdr/app/ vdr/include/ framework/include framework/communication/include/  minion/minion_app minion/include /home/beyond/Downloads/boost_1_62_0 
+INCS=/home/beyond include/ vdr/app/ vdr/include/ framework/include framework/communication/include/  minion/minion_app minion/include /usr/include/boost 
 INCLUDES=$(patsubst %, -I%, $(INCS))
 TARGETS=minion_main
 OBJS=$(patsubst %, %.o, $(TARGETS))
@@ -12,7 +14,7 @@ SHLIBS_PATHS_COLLON_SEP=.
 SHLIBS_CROSS_PATHS_COLLON_SEP=.
 SHLIBS_PATH=$(patsubst %, -L%, $(SHLIBS_DIRS))
 SHLIBS_CROSS_PATH=$(patsubst %, -L%, $(SHLIBS_CROSS_DIRS))
-SHLIBS= minion_app master_proxy minion communication protocols boost_thread boost_system boost_chrono
+SHLIBS= minion_app master_proxy minion communication protocols boost_thread boost_system boost_chrono config++ 
 SHLIBS_LINK=$(patsubst %, -l%, $(SHLIBS))
 
 minion: $(SHLIBS_DIRS) $(SHLIBS_CROSS_DIRS) minion.out
