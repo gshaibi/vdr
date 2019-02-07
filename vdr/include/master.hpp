@@ -40,10 +40,10 @@ public:
 private:
 
 	//enum & typedefs//
-	enum RequestStatus 
+	enum ReplyStatus 
 	{ 
-		NBD_AWAITING_REPLY,
-		REPLIED_TO_NBD
+		SOULD_REPLY_TO_OSP,
+		DONT_REPLY_YET
 	};
 
 	typedef std::vector<BlockTable::BlockLocation> BlockLocations;
@@ -52,7 +52,6 @@ private:
 	struct RequestData
 	{
 		Timer::Handle handle;
-		RequestStatus status;
 		BlockLocations blockLocations;
 	};
 
@@ -106,15 +105,15 @@ private:
 	void OnTimerReadIMP(protocols::ID);  //cb passed to Timer
 	void OnTimerWriteIMP(protocols::ID); //cb passed to Timer
 	RequestData ProcessRequestIMP(size_t offset_, protocols::ID id_);	  //used in Read & Write
-	RequestStatus ProcessReplyIMP(protocols::ID id_, size_t minionID_); //used in ReplyReadIMP & ReplyWriteIMP
+	ReplyStatus ProcessReplyIMP(protocols::ID id_, size_t minionID_); //used in ReplyReadIMP & ReplyWriteIMP
 	void SendWriteRequestsIMP(protocols::ID id_); // callback passed to encryptor
 	void SendReadRequestsIMP(protocols::ID id_);
 
 	void ReadReplyToOsProxyIMP(protocols::minion::ReadReply rep_); // callback passed to encryptor
 
 	// TODO: these instead of ProcessReplyIMP? need to unite duplicate code...
-	RequestStatus ProcessReadReplyIMP(protocols::ID id_, size_t minionID_);
-	RequestStatus ProcessWriteReplyIMP(protocols::ID id_, size_t minionID_);
+	ReplyStatus ProcessReadReplyIMP(protocols::ID id_, size_t minionID_);
+	ReplyStatus ProcessWriteReplyIMP(protocols::ID id_, size_t minionID_);
 
 };//class Master
 
