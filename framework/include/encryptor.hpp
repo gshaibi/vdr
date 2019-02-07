@@ -22,14 +22,11 @@ public:
 	//using generated dtor
 
 	//methods
-	void Encrypt(boost::function<void(void)> cb_, 
-									boost::shared_ptr<std::vector<char> > buff_);
+	void Encrypt(boost::function<void(void)> cb_, char *buff_, size_t len_);
 	
-	void Decrypt(boost::function<void(void)> cb_, 
-									boost::shared_ptr<std::vector<char> > buff_);
+	void Decrypt(boost::function<void(void)> cb_, char *buff_, size_t len_);
 
 private:
-	typedef boost::shared_ptr<std::vector<char> > Buffer;
 	typedef boost::function<void(void)> CallBack;
 
 	//members
@@ -37,8 +34,8 @@ private:
 	ThreadPool& m_threadPool;
 	
 	//private methods
-	void EncryptDecryptIMP(Eventer::Handle, Buffer buff_);
-	void SendTaskToThreadPoolIMP(CallBack cb_, Buffer buff_); 
+	void EncryptDecryptIMP(Eventer::Handle, char* buff_, size_t len_); 
+	void SendTaskToThreadPoolIMP(CallBack cb_, char* buff_, size_t len_); 
 };
 
 } //namespace ilrd

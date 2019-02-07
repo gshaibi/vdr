@@ -33,25 +33,43 @@ Eventer::Eventer(Reactor& reactor_):
 		msg << "[Eventer] ctor pipe no. READ = " << m_pipe[READ] <<" WRITE = "<< m_pipe[WRITE]<<std::endl;
 		ilrd::Log(msg.str());
 	}
+
+	//register to reactor with the READ side of pipe 
+	if(m_events.empty() == true)
+	{
+		{
+		std::stringstream msg;
+		msg << "[Eventer] ctor adding fd " << m_pipe[READ]<<" to reactor" <<std::endl;
+		ilrd::Log(msg.str());
+		}
+		m_reactor.AddFD(m_pipe[READ], Reactor::READ, boost::bind(&Eventer::OnEventFinishedCB, this, _1));
+	}
 }
 
 Eventer::~Eventer() noexcept
 {
 	ilrd::Log("[Eventer]  ~Eventer");
 
-	if(m_events.empty() == false)
+	std::stringstream msg;
+	msg << "[~Eventer] removing fd " << m_pipe[READ]<<" from reactor" <<std::endl;
+	ilrd::Log(msg.str());
+	
+	m_reactor.RemFD(m_pipe[READ], Reactor::READ);
+
+
+	//close pipes resource
+	if(-1 == close(m_pipe[WRITE]))
 	{
-		{
-		std::stringstream msg;
-		msg << "[Eventer] removing fd " << m_pipe[READ]<<" from reactor" <<std::endl;
-		ilrd::Log(msg.str());
-		}
-		m_reactor.RemFD(m_pipe[READ], Reactor::READ);
+		ilrd::Log("[~Eventer] ERROR - close pipe failed:");
+		strerror(errno);
 	}
 
 	//close pipes resource
-	close(m_pipe[READ]);
-	close(m_pipe[WRITE]);
+	if(-1 == close(m_pipe[READ]))
+	{
+		ilrd::Log("[~Eventer] ERROR - close pipe failed:");
+		strerror(errno);
+	}
 }
 
 //methods//
@@ -61,17 +79,6 @@ Eventer::Handle Eventer::SetEvent(boost::function<void(void)> cb_)
 	boost::unique_lock<boost::mutex> lock(m_eventsLock);
 
 	ilrd::Log("[Eventer] set event");
-
-	//register to reactor with the READ side of pipe 
-	if(m_events.empty() == true)
-	{
-		{
-		std::stringstream msg;
-		msg << "[Eventer] adding fd " << m_pipe[READ]<<" to reactor" <<std::endl;
-		ilrd::Log(msg.str());
-		}
-		m_reactor.AddFD(m_pipe[READ], Reactor::READ, boost::bind(&Eventer::OnEventFinishedCB, this, _1));
-	}
 	
 	//create a key 
 	Handle usrHandle = m_handleCounter++;
@@ -141,17 +148,6 @@ void Eventer::OnEventFinishedCB(int readFd_) //callback function
 
 	//remove the event element from the map
 	m_events.erase(usrHandle);
-
-	// remove from reactor in case of last event
-	if(m_events.empty() == true)
-	{
-		{
-		std::stringstream msg;
-		msg << "[Eventer] removing fd " << m_pipe[READ]<<" to reactor" <<std::endl;
-		ilrd::Log(msg.str());
-		}
-		m_reactor.RemFD(m_pipe[READ], Reactor::READ);
-	}
 
 	{
 		std::stringstream msg;

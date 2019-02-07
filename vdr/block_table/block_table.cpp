@@ -26,25 +26,46 @@ BlockTable::BlockTable(size_t blkSize_, size_t numBlks_, size_t numMinions_)
 std::vector<BlockTable::BlockLocation>
 BlockTable::Translate(size_t offset_) const
 {
-    Block blk = offset_ / m_blkSize;
-    size_t offsetInGroup = blk % m_numBlocksPerGroup;
-    BlockGroup blkGroup = blk / m_numBlocksPerGroup;
+	//New and not working.
 
-    typedef std::multimap<BlockGroup, 
-												BlockGroupLocation>::const_iterator MapIterator;
+    // Block blk = offset_ / m_blkSize;
+    // size_t offsetInGroup = blk % m_numBlocksPerGroup;
+    // BlockGroup blkGroup = blk / m_numBlocksPerGroup;
 
-    std::pair<MapIterator, MapIterator> respMinions(
-        m_blkGroup2Location.equal_range(blkGroup));
+    // typedef std::multimap<BlockGroup, 
+	// 											BlockGroupLocation>::const_iterator MapIterator;
 
-    std::vector<BlockTable::BlockLocation> ret;
+    // std::pair<MapIterator, MapIterator> respMinions(
+    //     m_blkGroup2Location.equal_range(blkGroup));
 
-    for (MapIterator i = respMinions.first; i != respMinions.second; ++i)
-    {
-        ret.push_back(BlockLocation{i->second.m_minion,
-                                    i->second.m_begin + offsetInGroup});
-    }
+    // std::vector<BlockTable::BlockLocation> ret;
 
-    return ret;
+    // for (MapIterator i = respMinions.first; i != respMinions.second; ++i)
+    // {
+    //     ret.push_back(BlockLocation{i->second.m_minion,
+    //                                 i->second.m_begin + offsetInGroup});
+    // }
+
+	// assert(ret.size() == 2);
+	// assert(ret[0].minionID == 0);
+	// assert(ret[0].blockOffset == blk);
+
+	// assert(ret[1].minionID == 0);
+	// assert(ret[1].blockOffset == blk + m_numBlocksPerGroup);
+
+    // return ret;
+
+
+	//Old and working.
+	std::vector<BlockLocation> info;
+
+    BlockLocation blockLocation;
+    blockLocation.minionID = 0;
+    blockLocation.blockOffset = offset_ / m_blkSize;
+
+    info.push_back(blockLocation);
+
+    return info;
 }
 
 } // namespace ilrd

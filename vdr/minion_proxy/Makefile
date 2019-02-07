@@ -1,7 +1,7 @@
 CC=g++
 CPPFLAGS=$(INCLUDES) $(SHLIBS_PATH) -ansi -std=c++98 -pedantic-errors -Wall -Wextra -O0 -g3 -fPIC -shared
 
-INCS=../include/ ../../framework/communication/include ../../include
+INCS=../include/ ../../framework/communication/include ../../include ../../framework/include
 INCLUDES=$(patsubst %, -I%, $(INCS))
 TARGETS=minion_proxy 
 OBJS=$(patsubst %, %.o, $(TARGETS))

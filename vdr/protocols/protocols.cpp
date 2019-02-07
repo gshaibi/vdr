@@ -12,7 +12,16 @@ namespace ilrd
 namespace protocols
 {
 
-ID::ID(char id_[8]) : m_id() { std::memcpy(m_id, id_, sizeof(m_id)); }
+ID::ID(char id_[8]) 
+: m_id() 
+{ 
+	std::memcpy(m_id, id_, sizeof(m_id)); 
+}
+
+bool ID::operator<(const ID& other_) const
+{
+	return (memcmp(m_id, other_.m_id, ID_ARR_SIZE) < 0);
+}
 
 const char* ID::GetID() const { return m_id; }
 

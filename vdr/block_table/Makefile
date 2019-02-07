@@ -1,7 +1,7 @@
 CC=g++
 CPPFLAGS=$(INCLUDES) -pedantic-errors -Wall -Wextra -O0 -g3 -fPIC
 SHARED=-shared
-INCS=../include/ ../../framework/communication/include ../../include
+INCS=../include/ ../../framework/communication/include ../../include ../../framework/include
 INCLUDES=$(patsubst %, -I%, $(INCS))
 TARGETS=block_table block_table_test
 OBJS=$(patsubst %, %.o, $(TARGETS))

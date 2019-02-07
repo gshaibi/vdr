@@ -7,7 +7,7 @@ OBJS=$(patsubst %, %.o, $(TARGETS))
 SHLIBS=
 BOOSTFLAGS = -lboost_system -lboost_chrono
 
-timer.so: $(OBJS)
+libtimer.so: $(OBJS)
 	$(CXX) $(CXXFLAGS) $^ $(SHLIBS) -o $@ 
 
 test: timer_test.cpp timer.o 
