@@ -327,7 +327,6 @@ Timer::Handle Master::SetTimerIMP(protocols::ID id_)
 // TODO: make inline?
 Timer::CallBack Master::GetTimerCbIMP(protocols::ID id_)
 {
-	// TODO: bind used correctly?
 	return bind(&Master::OnTimerIMP, this, id_);
 }
 
@@ -398,12 +397,12 @@ Master::RequestData Master::ProcessRequestIMP(size_t offset_,
 	BlockLocations requests(m_blockTable.Translate(offset_));
 
 	// create RequestData to insert in map
-	RequestData data = {0, requests}; //TODO: 0 is invalid val
+	RequestData data = {0, requests}; //TODO: 0 is invalid val - need to change it to static const or something
 
 	return data;
 }
 
-// TODO: change requests_ to reference& for for SendWriteRequestsIMP & SendReadRequestsIMP
+// TODO: change id_ to reference for for SendWriteRequestsIMP & SendReadRequestsIMP?
 //SendWriteRequestsIMP is passed as a callback to Encrypt
 void Master::SendWriteRequestsIMP(protocols::ID id_)
 {

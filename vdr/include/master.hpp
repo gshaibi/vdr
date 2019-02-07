@@ -20,7 +20,6 @@
 #include "encryptor.hpp" //class encryptor
 
 // TODO: exception safety
-// TODO: add timer to Makefile
 
 namespace ilrd
 {
