@@ -6,6 +6,7 @@
 #include <boost/thread.hpp>
 #include <boost/thread/scoped_thread.hpp>
 #include <boost/chrono.hpp>
+#include <sstream>
 
 #include <arpa/inet.h> //ntohl
 #include <endian.h> //be64toh
@@ -26,7 +27,7 @@ namespace ilrd
 
 void *OsProxy::NbdDoItIMP(boost::shared_ptr<int> nbdFd)
 {
-	Log("Entering NBD_DO_IT");
+	Log("[OsProxy ] Entering NBD_DO_IT");
     DEBUG(sleep(1));
     while (-1 == ioctl(*nbdFd, NBD_DO_IT))
     {
@@ -36,12 +37,12 @@ void *OsProxy::NbdDoItIMP(boost::shared_ptr<int> nbdFd)
         case EINTR:
             continue;
         default:
-            Log("NbdDoIt error");
+            Log("[OsProxy ] NbdDoIt error");
             perror("");
 			DEBUG(if (30 == ++counter) {return NULL;})
         }
     }
-    Log("Exiting NbdDoIt thread");
+    Log("\n\n[OsProxy ] Exiting NbdDoIt thread\n\n");
 	return NULL;
 }
 
@@ -65,7 +66,7 @@ void OsProxy::CloseNbdIMP(int *nbdFd)
 void OsProxy::InitNbdIMP(size_t deviceNumBlocks_, const std::string &devicePath_,
                       int socket_)
 {
-	Log("Opening nbd file");
+	Log("[OsProxy ] Opening nbd file");
     boost::shared_ptr<int> nbdFd(new int(open(devicePath_.c_str(), O_RDWR)), CloseNbdIMP);
 
     if (-1 == *nbdFd)
@@ -73,7 +74,7 @@ void OsProxy::InitNbdIMP(size_t deviceNumBlocks_, const std::string &devicePath_
         throw std::runtime_error("nbd opening error. check errno.");
     }
 
-	Log("Clearing Nbd socket");
+	Log("[OsProxy ] Clearing Nbd socket");
     if (-1 == ioctl(*nbdFd, NBD_CLEAR_SOCK))
     {
         throw std::runtime_error("NBD_CLEAR_SOCK ioctl error. check errno.");
@@ -81,32 +82,32 @@ void OsProxy::InitNbdIMP(size_t deviceNumBlocks_, const std::string &devicePath_
 
 	//FIXME: log
 	std::stringstream s;
-	s << "Setting nbd socket to " << socket_;
+	s << "[ OsProxy ] Setting nbd socket to " << socket_;
 	Log(s.str());
     if (-1 == ioctl(*nbdFd, NBD_SET_SOCK, socket_))
     {
         throw std::runtime_error("NBD_SET_SOCK ioctl error. check errno.");
     }
 
-	Log("Setting Timeout of nbd to infinity");
+	Log("[OsProxy ] Setting Timeout of nbd to infinity");
 	if (-1 == ioctl(*nbdFd, NBD_SET_TIMEOUT, 99999999))
 	{
 		throw std::runtime_error("NBD_SET_TIMEOUT ioctl error. check errno.");
 	}
 
-	Log("Setting block size");
+	Log("[OsProxy ] Setting block size");
 	if (-1 == ioctl(*nbdFd, NBD_SET_BLKSIZE, 0x1000))
 	{
 		throw std::runtime_error("NBD_SET_BLKSIZE ioctl error. check errno.");
 	}
 
-	Log("Setting num blocks");
+	Log("[OsProxy ] Setting num blocks");
 	if (-1 == ioctl(*nbdFd, NBD_SET_SIZE_BLOCKS, deviceNumBlocks_))
 	{
 		throw std::runtime_error("NBD_SET_SIZE_BLOCKS ioctl error. check errno.");
 	}
 
-	Log("Creating nbdRespirator thread");
+	Log("[OsProxy ] Creating nbdRespirator thread");
 	boost::scoped_thread<> nbdRespirator(NbdDoItIMP, nbdFd);
     m_nbdRespirator.swap(nbdRespirator);
 
@@ -131,7 +132,7 @@ OsProxy::OsProxy(Reactor &r_, const std::string &devicePath_,
 
 size_t OsProxy::OnHeaderCB(TcpReader::SharedBuffer header_)
 {
-	Log("In OsProxy::OnHeaderCB");
+	Log("[OsProxy ] In OsProxy::OnHeaderCB");
 
     nbd_request request;
     memcpy(&request, &(*header_)[0], HDR_SIZE);
@@ -149,7 +150,7 @@ size_t OsProxy::OnHeaderCB(TcpReader::SharedBuffer header_)
 
 void OsProxy::OnPacketCB(TcpReader::SharedBuffer packet_)
 {
-	Log("In OsProxy::OnPacketCB");
+	Log("[OsProxy ] In OsProxy::OnPacketCB");
 
     nbd_request request;
 
@@ -191,7 +192,7 @@ void OsProxy::Disconnect()
 
 void OsProxy::ReplyRest()
 {
-	Log("In OsProxy::ReplyRest");
+	Log("[OsProxy ] In OsProxy::ReplyRest");
 
     DEBUG(std::cout << "Replying on unknown request" << std::endl;)
 }
@@ -208,24 +209,30 @@ void OsProxy::SendNbdReply(const protocols::ID& id_, int status_)
 
     // Send the nbd_reply to nbd
 	boost::shared_ptr<std::vector <char> > replyBuffer(new std::vector<char>(sizeof(nbdReply)));
+
+	{
+		std::stringstream str;
+		str << " [ OsProxy ] Sending NbdReply. ID = " << *(size_t *)(id_.GetID()) << " . Status =  " << status_ << std::endl;
+		Log(str.str());
+	}	
 	
-	Log("Sending NbdReply");
 	std::memcpy(&(((*replyBuffer))[0]), &nbdReply, sizeof(nbd_reply));
     m_writer.Write(replyBuffer);
 }
 
 void OsProxy::ReplyRead(protocols::os::ReadReply reply_)
 {
-	Log("Replying read back to nbd. ");
+	Log("[OsProxy ] Replying read back to nbd. ");
     SendNbdReply(reply_.GetID(), reply_.GetStatus());
 
     // Send the data to nbd
+	Log("[OsProxy ] Sending the data to nbd");
 	m_writer.Write(reply_.GetData());
 }
 
 void OsProxy::ReplyWrite(protocols::os::WriteReply reply_)
 {
-	Log("Replying write back to nbd. ");
+	Log("[OsProxy ] Replying write back to nbd. ");
 
     SendNbdReply(reply_.GetID(), reply_.GetStatus());
 }

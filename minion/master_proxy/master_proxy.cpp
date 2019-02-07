@@ -24,12 +24,12 @@ namespace minion
 MasterProxy::MasterProxy(ilrd::Reactor& r_, Minion& m_, const sockaddr_in& vdrAddr_) : 
 	m_reactor(r_), m_minion(m_), m_udpSock(), m_vdrAddr(vdrAddr_)
 {
-    ilrd::Log("Opening udp socket");
+    ilrd::Log("[MasterProxy ] Opening udp socket");
     m_udpSock = socket(PF_INET, SOCK_DGRAM, 0);
 
     if (-1 == m_udpSock) // TODO: Maybe create specific exceptions?
     {
-		ilrd::Log("Failed opening socket.");
+		ilrd::Log("[MasterProxy ] Failed opening socket.");
         throw std::runtime_error(strerror(errno));
     }
 
@@ -42,13 +42,13 @@ MasterProxy::MasterProxy(ilrd::Reactor& r_, Minion& m_, const sockaddr_in& vdrAd
 	int enable = 1;
 	if (setsockopt(m_udpSock, SOL_SOCKET, SO_REUSEADDR, &enable, sizeof(int)) < 0)
     {
-		ilrd::Log("setsockopt(SO_REUSEADDR) failed");
+		ilrd::Log("[MasterProxy ] setsockopt(SO_REUSEADDR) failed");
 	}
 
-    ilrd::Log("Binding udp socket to minion address");
+    ilrd::Log("[MasterProxy ] Binding udp socket to minion address");
     if (0 != bind(m_udpSock, (sockaddr*)(&minionAddr), sizeof(minionAddr)))
     {
-		ilrd::Log("Failed binding address to socket.");
+		ilrd::Log("[MasterProxy ] Failed binding address to socket.");
 		close(m_udpSock);
         throw std::runtime_error(strerror(errno));
 	}
@@ -64,7 +64,7 @@ MasterProxy::~MasterProxy() noexcept
 
 void MasterProxy::ReplyRead(const ilrd::protocols::ID& id_, int status_, boost::shared_ptr< std::vector<char> > dataPtr_)
 {
-	ilrd::Log("MasterProxy: Replying read to master");
+	ilrd::Log("[MasterProxy ] MasterProxy: Replying read to master");
 
 	ilrd::protocols::minionUDP::reply rep; 
 	ConstructReplyImp(&rep, id_, ilrd::protocols::minionUDP::READ, status_);
@@ -75,7 +75,7 @@ void MasterProxy::ReplyRead(const ilrd::protocols::ID& id_, int status_, boost::
 
 void MasterProxy::ReplyWrite(const ilrd::protocols::ID& id_, int status_)
 {
-	ilrd::Log("MasterProxy: Replying write to master");
+	ilrd::Log("[MasterProxy ] MasterProxy: Replying write to master");
 
 	ilrd::protocols::minionUDP::reply rep;
 	ConstructReplyImp(&rep, id_, ilrd::protocols::minionUDP::WRITE, status_);
@@ -92,18 +92,18 @@ void MasterProxy::ConstructReplyImp(ilrd::protocols::minionUDP::reply* rep_,
 
 void MasterProxy::SendReplyImp(const ilrd::protocols::minionUDP::reply& rep_)
 {
-	ilrd::Log("MasterProxy: Sending reply to master");
+	ilrd::Log("[MasterProxy ] MasterProxy: Sending reply to master");
 
 	if (sizeof (rep_) != sendto(m_udpSock, &rep_, sizeof(rep_), MSG_DONTWAIT, (sockaddr *)&m_vdrAddr, sizeof(m_vdrAddr)))
 	{
-		ilrd::Log("Error sending reply to master");
+		ilrd::Log("[MasterProxy ] Error sending reply to master");
 		throw std::runtime_error(std::strerror(errno));
 	}
 }
 
 void MasterProxy::OnPacketCB(int fd_)
 {
-	ilrd::Log("MasterProxy got new package!");
+	ilrd::Log("[MasterProxy ] MasterProxy got new package!");
     ilrd::protocols::minionUDP::request req;
 
     ssize_t bytesRead(
