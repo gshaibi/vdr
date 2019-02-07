@@ -2,11 +2,7 @@ CXX=g++
 CXXFLAGS=$(INCLUDES) -ansi -std=c++98 -pedantic-errors -Wall -Wextra -O0 -g3 -fPIC 
 space :=
 space +=
-<<<<<<< HEAD
-INCS=include/ vdr/app/ vdr/include/ framework/communication/include/  minion/minion_app minion/include framework/include
-=======
 INCS=include/ vdr/app/ vdr/include/ framework/communication/include/  minion/minion_app minion/include framework/include/
->>>>>>> ver02-pessimism
 INCLUDES=$(patsubst %, -I%, $(INCS))
 VDR_TARGETS=vdr_main
 MINION_TARGETS=minion_main
@@ -15,11 +11,7 @@ MINION_OBJS=$(patsubst %, %.o, $(MINION_TARGETS))
 SHLIBS_DIRS=vdr/app minion/minion_app minion/master_proxy minion/minion vdr/master framework/communication vdr/os_proxy vdr/protocols vdr/minion_proxy vdr/block_table framework/timer
 SHLIBS_PATHS_COLLON_SEP=$(subst $(space),:,$(SHLIBS_DIRS))
 SHLIBS_PATH=$(patsubst %, -L%, $(SHLIBS_DIRS))
-<<<<<<< HEAD
-SHLIBS= app minion_app master_proxy minion master communication os_proxy protocols boost_thread boost_system boost_chrono minion_proxy block_table config++
-=======
-SHLIBS= app minion_app master_proxy minion master communication os_proxy protocols boost_thread boost_system boost_chrono minion_proxy block_table timer
->>>>>>> ver02-pessimism
+SHLIBS= app minion_app master_proxy minion master communication os_proxy protocols boost_thread boost_system boost_chrono minion_proxy block_table timer config++
 SHLIBS_LINK=$(patsubst %, -l%, $(SHLIBS))
 
 

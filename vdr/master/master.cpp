@@ -284,7 +284,7 @@ Timer::Handle Master::SetTimerIMP(protocols::ID id_)
 }
 
 // TODO: make inline?
-Timer::CallBack_type Master::GetTimerCbIMP(protocols::ID id_)
+Timer::CallBack Master::GetTimerCbIMP(protocols::ID id_)
 {
 	// TODO: bind used correctly?
 	return bind(&Master::OnTimerIMP, this, id_);

@@ -81,7 +81,7 @@ private:
 
 	//static data members//
 	static const size_t BLOCK_SIZE = 4096; //TODO: remove this when have Config?
-	static const size_t TIMEOUT_IN_NANOSECONDS = 1000; //used to initialize TIMEOUT
+	static const size_t TIMEOUT_IN_NANOSECONDS = 100; //used to initialize TIMEOUT
 	static boost::chrono::steady_clock::duration TIMEOUT; 
 
 	//friend class//
@@ -91,7 +91,7 @@ private:
 	void ReplyReadIMP(protocols::minion::ReadReply reply_);
 	void ReplyWriteIMP(protocols::minion::WriteReply reply_);
 	Timer::Handle SetTimerIMP(protocols::ID id_);
-	Timer::CallBack_type GetTimerCbIMP(protocols::ID); //binds OnTimerTMP
+	Timer::CallBack GetTimerCbIMP(protocols::ID); //binds OnTimerTMP
 	// Timer::CallBack_type GetTimerWriteCbIMP(protocols::ID); //binds OnTimerReadTMP
 	// Timer::CallBack_type GetTimerCbIMP(protocols::ID); 			//binds OnTimerWriteTMP
 	void OnTimerIMP(protocols::ID); //cb passed to Timer
