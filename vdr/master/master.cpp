@@ -32,13 +32,6 @@ Master::Master(size_t nMinions_, Reactor& r_, const std::vector<sockaddr_in> min
 	// initialize the proxy minions
 	for (int i = 0; i < nMinions_; ++i)
 	{
-		{
-			stringstream str;
-			char* minionIP = NULL;
-			inet_ntop(minionAddr_[i].sin_family, &minionAddr_[i].sin_addr.s_addr, minionIP, (socklen_t)50);
-			str << "[Master] ctor: minionID = " << i << " IP address = " <<  minionIP;
-			Log(str.str());
-		}
 		m_minionProxies.push_back(boost::shared_ptr<MinionProxy>(
 									new MinionProxy(i, *this, r_, minionAddr_[i])));
 	}
