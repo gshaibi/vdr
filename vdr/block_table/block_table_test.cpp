@@ -1,20 +1,69 @@
+#include <algorithm>
+#include <iostream>
+#include <cstring>
+
+
 #include "block_table.hpp"
 #include "unit_test.hpp"
 
-using namespace ilrd;
+const int NUM_MINIONS = 1;
+const int NUM_BLOCKS = 11;
+const int BLOCK_SIZE = 1;
+
+void FillInMap(ilrd::BlockTable::BlockLocation blkLocation_)
+{
+	static bool arr[NUM_MINIONS][NUM_BLOCKS / NUM_MINIONS * 2];
+	static bool shouldPrint = false;
+
+	arr[blkLocation_.minionID][blkLocation_.blkOffset] = true;
+
+	if (shouldPrint)
+	{
+		for(size_t minion = 0; minion < sizeof(arr) / sizeof(arr[0]); minion++)
+		{
+			for(size_t offset = 0; offset < sizeof(arr[0]) / sizeof(arr[0][0]); offset++)
+			{
+				std::cout << "| " << arr[minion][offset];
+			}
+			std::cout  << std::endl;
+		}
+	}
+	shouldPrint = !shouldPrint;
+	std::cout << "NEXT" << std::endl;
+}
 
 TestResult Overall()
 {
-  BlockTable bt(12, 3);
-  auto res = bt.Translate(3);
+    ilrd::BlockTable bt(BLOCK_SIZE, NUM_BLOCKS, NUM_MINIONS);
 
-	res.
+	//TODO: Check 2
+	// auto arr = bt.Translate(3);
+	
+	// REQUIRE(arr.size() == 2);
 
-  return SUCCESS;
+	// std::cout << "Minion num " << arr[0].minionID << std::endl;
+	// std::cout << "Offset  " << arr[0].blkOffset << std::endl << std::endl;
+	
+	// std::cout << "Minion num " << arr[1].minionID << std::endl;
+	// std::cout << "Offset  " << arr[1].blkOffset << std::endl;
+	
+
+
+
+	for(size_t i = 0; i < NUM_BLOCKS * BLOCK_SIZE; i++)
+	{
+		auto res = bt.Translate(i);
+		std::cout << i << std::endl;
+		REQUIRE(res.size() == 2);
+		std::for_each(res.begin(), res.end(), FillInMap);
+	}
+	
+
+    return SUCCESS;
 }
 
 int main()
 {
-  RUNTEST(Overall);
-  return 0;
+    RUNTEST(Overall);
+    return 0;
 }
