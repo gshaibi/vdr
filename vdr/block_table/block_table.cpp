@@ -55,14 +55,6 @@ BlockTable::Translate(size_t offset_) const
                                     i->second.m_begin + offsetInGroup});
     }
 
-	assert(ret.size() == 2);
-
-	assert(ret[0].minionID == 0);
-	assert(ret[0].blockOffset == blk);
-
-	assert(ret[1].minionID == 0);
-	assert(ret[1].blockOffset == blk + m_numBlocksPerGroup);
-
 	{
 		std::stringstream str;
 		str << "[BlockTable] Returning block locations - \n";
