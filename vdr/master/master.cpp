@@ -48,8 +48,8 @@ Master::Master(size_t nMinions_, size_t numBlocks_, Reactor& r_, const std::vect
 	}
 	catch (const libconfig::SettingNotFoundException& nfex)
     {
-		//TODO: write error to log
-        std::cerr << "Setting '" << nfex.getPath() << "' is missing from conf file." << std::endl;
+			//TODO: write error to log
+			std::cerr << "Setting '" << nfex.getPath() << "' is missing from conf file." << std::endl;
     }
 	catch (const libconfig::SettingTypeException& tex)
 	{
@@ -119,8 +119,10 @@ void Master::Write(protocols::os::WriteRequest req_)
 	m_writeRequests.insert(make_pair(req_.GetID(), to_insert));
 
 	// encrypt data then SendWriteRequestsIMP
-	m_encryptor.Encrypt(boost::bind(&Master::SendWriteRequestsIMP,this, req_.GetID()), 
-						const_cast<char*>(req_.GetData()), BLOCK_SIZE);
+	m_encryptor.Encrypt(boost::bind(&Master::SendWriteRequestsIMP,
+	                    this, req_.GetID()), 
+											const_cast<char*>(req_.GetData()), 
+											BLOCK_SIZE);
 }
 
 /*******************************private methods********************************/
@@ -217,8 +219,8 @@ Master::ReplyStatus Master::ProcessReadReplyIMP(protocols::ID id_, size_t minion
 		return DONT_REPLY_YET;
 	}
 
-	MappedReadRequest request = (*found).second;
-	BlockLocations bl = request.data.blockLocations;
+	MappedReadRequest& request = (*found).second;
+	BlockLocations& bl = request.data.blockLocations;
 
 	// find minionID_ in vector
 	for (Iterator iter(bl.begin()); iter != bl.end(); ++iter)
@@ -269,8 +271,8 @@ Master::ReplyStatus Master::ProcessWriteReplyIMP(protocols::ID id_, size_t minio
 		return DONT_REPLY_YET;
 	}
 
-	MappedWriteRequest request = (*found).second;
-	BlockLocations bl = request.data.blockLocations;
+	MappedWriteRequest& request = (*found).second;
+	BlockLocations& bl = request.data.blockLocations;
 
 	// find minionID_ in vector
 	for (Iterator iter(bl.begin()); iter != bl.end(); ++iter)
@@ -398,7 +400,7 @@ Master::RequestData Master::ProcessRequestIMP(size_t offset_,
 	BlockLocations requests(m_blockTable.Translate(offset_));
 
 	// create RequestData to insert in map
-	RequestData data = {0, requests}; //TODO: 0 is invalid val
+	RequestData data = {0, requests}; //TODO: 0 should be an invalid val
 
 	return data;
 }
