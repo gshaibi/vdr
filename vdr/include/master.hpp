@@ -87,7 +87,7 @@ private:
 
 	//static data members//
 	static const size_t BLOCK_SIZE = 4096; //TODO: remove this when have Config?
-	static const size_t TIMEOUT_IN_NANOSECONDS = 100000000; //used to initialize TIMEOUT
+	static const size_t TIMEOUT_IN_NANOSECONDS = 10000000000; //used to initialize TIMEOUT
 	static boost::chrono::steady_clock::duration TIMEOUT; 
 
 	//friend class//

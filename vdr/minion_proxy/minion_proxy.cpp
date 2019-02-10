@@ -4,6 +4,7 @@
 #include <cstring>		//using memcpy
 #include <cstdio>		//using perror
 #include <cerrno>		//errno
+#include <sstream> // stringstream
 
 #include <boost/bind.hpp> //using boost bind
 
@@ -142,7 +143,9 @@ void MinionProxy::RecieveFromMinionCB(int socket_)
 	int n_bytes = 0;
 	UDPReply minionRep;
 
-	ilrd::Log("[MinionProxy] recieving respond from minion");
+	std::stringstream ss;
+	ss << "[MinionProxy] recieving response from minion | minionID = " << m_minionID;
+	ilrd::Log(ss.str());
 
 	//read the udp massage from socket to minionUDP reply struct
 	n_bytes = recvfrom(socket_, &minionRep, sizeof(minionRep), MSG_DONTWAIT,
@@ -177,7 +180,7 @@ void MinionProxy::RecieveFromMinionCB(int socket_)
 
 		//send master the reply
 		ilrd::Log("[MinionProxy] sending packet to master");
-		m_master.ReplyReadIMP(protocols::minion::ReadReply(protocols::ID(minionRep.ID), 0, ntohl(minionRep.status), buffer));
+		m_master.ReplyReadIMP(protocols::minion::ReadReply(protocols::ID(minionRep.ID), m_minionID, ntohl(minionRep.status), buffer));
 
 		break;
 	}
@@ -193,7 +196,7 @@ void MinionProxy::RecieveFromMinionCB(int socket_)
 		//send master the reply
 		ilrd::Log("[MinionProxy] sending packet to master");
 		//reply to master that write
-		m_master.ReplyWriteIMP(protocols::minion::WriteReply(protocols::ID(minionRep.ID), 0, ntohl(minionRep.status)));
+		m_master.ReplyWriteIMP(protocols::minion::WriteReply(protocols::ID(minionRep.ID), m_minionID, ntohl(minionRep.status)));
 		break;
 	}
 

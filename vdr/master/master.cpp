@@ -275,7 +275,8 @@ Master::ReplyStatus Master::ProcessWriteReplyIMP(protocols::ID id_, size_t minio
 	BlockLocations& bl = request.data.blockLocations;
 
 	// find minionID_ in vector
-	for (Iterator iter(bl.begin()); iter != bl.end(); ++iter)
+	Iterator iter(bl.begin());
+	for (; iter != bl.end(); ++iter)
 	{
 		// if found minion - remove it 
 		if (minionID_ == (*iter).minionID)
@@ -309,7 +310,10 @@ Master::ReplyStatus Master::ProcessWriteReplyIMP(protocols::ID id_, size_t minio
 
 
 	// if didn't find minion in vector - ignore it
-	Log("[Master] ERROR: request ID is in WriteMap but minionID is not in vector - ignoring the reply");
+	if (bl.end() == iter)
+	{
+		Log("[Master] ERROR: request ID is in WriteMap but minionID is not in vector - ignoring the reply");
+	}
 
 	return DONT_REPLY_YET; 
 }
